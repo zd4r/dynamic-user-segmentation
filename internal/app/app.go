@@ -76,8 +76,8 @@ func (a *App) initServiceProvider(_ context.Context) error {
 	return nil
 }
 
-func (a *App) initHTTPServer(_ context.Context) error {
-	handler := httpV1.NewRouter()
+func (a *App) initHTTPServer(ctx context.Context) error {
+	handler := httpV1.NewRouter(a.serviceProvider.GetUserService(ctx), a.serviceProvider.GetSegmentService(ctx))
 	a.httpServer = httpserver.New(handler, httpserver.Port(a.serviceProvider.GetHTTPConfig().Port()))
 
 	return nil

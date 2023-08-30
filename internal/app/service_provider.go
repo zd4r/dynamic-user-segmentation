@@ -7,12 +7,22 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zd4r/dynamic-user-segmentation/internal/client/pg"
 	"github.com/zd4r/dynamic-user-segmentation/internal/config"
+	segmentRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/segment"
+	userRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/user"
+	segmentSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/segment"
+	userSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/user"
 	"github.com/zd4r/dynamic-user-segmentation/pkg/closer"
 )
 
 type serviceProvider struct {
 	pgConfig   config.PGConfig
 	httpConfig config.HTTPConfig
+
+	userRepository *userRepo.Repository
+	userService    *userSrv.Service
+
+	segmentRepository *segmentRepo.Repository
+	segmentService    *segmentSrv.Service
 
 	pgClient pg.Client
 }
@@ -69,4 +79,36 @@ func (s *serviceProvider) GetPGClient(ctx context.Context) pg.Client {
 	}
 
 	return s.pgClient
+}
+
+func (s *serviceProvider) GetUserRepository(ctx context.Context) *userRepo.Repository {
+	if s.userRepository == nil {
+		s.userRepository = userRepo.NewRepository(s.GetPGClient(ctx))
+	}
+
+	return s.userRepository
+}
+
+func (s *serviceProvider) GetUserService(ctx context.Context) *userSrv.Service {
+	if s.userService == nil {
+		s.userService = userSrv.NewService(s.GetUserRepository(ctx))
+	}
+
+	return s.userService
+}
+
+func (s *serviceProvider) GetSegmentRepository(ctx context.Context) *segmentRepo.Repository {
+	if s.segmentRepository == nil {
+		s.segmentRepository = segmentRepo.NewRepository(s.GetPGClient(ctx))
+	}
+
+	return s.segmentRepository
+}
+
+func (s *serviceProvider) GetSegmentService(ctx context.Context) *segmentSrv.Service {
+	if s.segmentService == nil {
+		s.segmentService = segmentSrv.NewService(s.GetSegmentRepository(ctx))
+	}
+
+	return s.segmentService
 }
