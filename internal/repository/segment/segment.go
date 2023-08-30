@@ -26,8 +26,8 @@ func NewRepository(client pg.Client) *Repository {
 func (r *Repository) Create(ctx context.Context, segment *segmentModel.Segment) error {
 	builder := sq.Insert(segmentTableName).
 		PlaceholderFormat(sq.Dollar).
-		Columns("id", "slug").
-		Values(segment.Id, segment.Slug)
+		Columns("slug").
+		Values(segment.Slug)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
