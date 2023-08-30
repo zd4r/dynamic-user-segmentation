@@ -64,7 +64,7 @@ func (r *userRoutes) Delete(c echo.Context) error {
 	}
 
 	if err := r.userService.Delete(ctx, user); err != nil {
-		log.Println(err)
+		log.Println(err) // TODO: logger
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
