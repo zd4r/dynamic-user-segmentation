@@ -22,7 +22,7 @@ func newUserRoutes(handler *echo.Group, userService userService) {
 }
 
 type createUserRequest struct {
-	Id int `json:"id"`
+	Login string `json:"login"`
 }
 
 func (r *userRoutes) Create(c echo.Context) error {
@@ -35,7 +35,7 @@ func (r *userRoutes) Create(c echo.Context) error {
 	}
 
 	user := &userModel.User{
-		Id: req.Id,
+		Login: req.Login,
 	}
 
 	if err := r.userService.Create(ctx, user); err != nil {
@@ -47,7 +47,7 @@ func (r *userRoutes) Create(c echo.Context) error {
 }
 
 type deleteUserRequest struct {
-	Id int `json:"id"`
+	Login string `json:"login"`
 }
 
 func (r *userRoutes) Delete(c echo.Context) error {
@@ -60,7 +60,7 @@ func (r *userRoutes) Delete(c echo.Context) error {
 	}
 
 	user := &userModel.User{
-		Id: req.Id,
+		Login: req.Login,
 	}
 
 	if err := r.userService.Delete(ctx, user); err != nil {
