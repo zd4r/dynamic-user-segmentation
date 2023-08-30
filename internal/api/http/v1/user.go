@@ -1,20 +1,72 @@
 package v1
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	userModel "github.com/zd4r/dynamic-user-segmentation/internal/model/user"
 )
 
 type userRoutes struct {
+	userService userService
 }
 
-func newUserRoutes(handler *echo.Group) {
-	r := &userRoutes{}
+func newUserRoutes(handler *echo.Group, userService userService) {
+	r := &userRoutes{
+		userService: userService,
+	}
 
-	handler.GET("/user", r.Get)
+	handler.POST("/user", r.Create)
+	handler.DELETE("/user", r.Delete)
 }
 
-func (r *userRoutes) Get(c echo.Context) error {
+type createUserRequest struct {
+	Id int `json:"id"`
+}
+
+func (r *userRoutes) Create(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	req := new(createUserRequest)
+	if err := c.Bind(req); err != nil {
+		log.Println(err) // TODO: logger
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	user := &userModel.User{
+		Id: req.Id,
+	}
+
+	if err := r.userService.Create(ctx, user); err != nil {
+		log.Println(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, nil)
+}
+
+type deleteUserRequest struct {
+	Id int `json:"id"`
+}
+
+func (r *userRoutes) Delete(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	req := new(deleteUserRequest)
+	if err := c.Bind(req); err != nil {
+		log.Println(err) // TODO: logger
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	user := &userModel.User{
+		Id: req.Id,
+	}
+
+	if err := r.userService.Delete(ctx, user); err != nil {
+		log.Println(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	return c.JSON(http.StatusOK, nil)
 }
