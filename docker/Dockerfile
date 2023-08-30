@@ -1,0 +1,25 @@
+# Step 1: Modules caching
+FROM golang:1.21.0-alpine3.18 as modules
+COPY go.mod go.sum /modules/
+WORKDIR /modules
+RUN go mod download
+
+# Step 2: Builder
+FROM golang:1.21.0-alpine3.18 as builder
+COPY --from=modules /go/pkg /go/pkg
+COPY . /app
+WORKDIR /app
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -o /bin/app ./cmd/server
+
+# Step 3: Final
+FROM scratch
+
+# GOPATH for scratch images is /
+COPY --from=builder /app/.env /
+COPY --from=builder /bin/app /app
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+EXPOSE 8080
+
+CMD ["/app"]
