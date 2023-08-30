@@ -5,14 +5,14 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func NewRouter() *echo.Echo {
+func NewRouter(userService userService, segmentService segmentService) *echo.Echo {
 	handler := echo.New()
 	handler.Use(middleware.Recover())
 
 	h := handler.Group("/v1")
 	{
-		newUserRoutes(h)
-		newSegmentRoutes(h)
+		newUserRoutes(h, userService)
+		newSegmentRoutes(h, segmentService)
 	}
 
 	return handler
