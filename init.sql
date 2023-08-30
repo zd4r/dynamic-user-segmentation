@@ -1,7 +1,6 @@
 CREATE TABLE "user"
 (
-    id         bigserial                   PRIMARY KEY,
-    login      text                        NOT NULL UNIQUE
+    id         bigint                      PRIMARY KEY
 );
 
 CREATE TABLE segment

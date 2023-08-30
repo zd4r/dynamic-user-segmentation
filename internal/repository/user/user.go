@@ -26,8 +26,8 @@ func NewRepository(client pg.Client) *Repository {
 func (r *Repository) Create(ctx context.Context, user *userModel.User) error {
 	builder := sq.Insert(userTableName).
 		PlaceholderFormat(sq.Dollar).
-		Columns("login").
-		Values(user.Login)
+		Columns("id").
+		Values(user.Id)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
