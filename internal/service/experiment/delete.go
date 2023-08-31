@@ -20,7 +20,7 @@ func (s *Service) Delete(ctx context.Context, experiment *experimentModel.Experi
 	return nil
 }
 
-func (s *Service) DeleteBatch(ctx context.Context, experiments []*experimentModel.Experiment) error {
+func (s *Service) DeleteBatch(ctx context.Context, experiments []experimentModel.Experiment) error {
 	if len(experiments) != 0 {
 		rowsAffected, err := s.experimentRepository.DeleteBatch(ctx, experiments)
 		if err != nil {

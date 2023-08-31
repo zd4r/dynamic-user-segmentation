@@ -45,7 +45,7 @@ func (r *Repository) Create(ctx context.Context, experiment *experimentModel.Exp
 	return nil
 }
 
-func (r *Repository) CreateBatch(ctx context.Context, experiments []*experimentModel.Experiment) error {
+func (r *Repository) CreateBatch(ctx context.Context, experiments []experimentModel.Experiment) error {
 	builder := sq.Insert(experimentTableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns("user_id", "segment_id")
@@ -103,7 +103,7 @@ func (r *Repository) Delete(ctx context.Context, experiment *experimentModel.Exp
 	return ct.RowsAffected(), nil
 }
 
-func (r *Repository) DeleteBatch(ctx context.Context, experiments []*experimentModel.Experiment) (int64, error) {
+func (r *Repository) DeleteBatch(ctx context.Context, experiments []experimentModel.Experiment) (int64, error) {
 	var sqOrStatement sq.Or
 	for _, experiment := range experiments {
 		sqOrStatement = append(sqOrStatement,

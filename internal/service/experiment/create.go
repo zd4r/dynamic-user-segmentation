@@ -10,7 +10,7 @@ func (s *Service) Create(ctx context.Context, experiment *experimentModel.Experi
 	return s.experimentRepository.Create(ctx, experiment)
 }
 
-func (s *Service) CreateBatch(ctx context.Context, experiments []*experimentModel.Experiment) error {
+func (s *Service) CreateBatch(ctx context.Context, experiments []experimentModel.Experiment) error {
 	if len(experiments) != 0 {
 		return s.experimentRepository.CreateBatch(ctx, experiments)
 	}

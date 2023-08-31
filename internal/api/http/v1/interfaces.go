@@ -29,8 +29,8 @@ type segmentService interface {
 var _ segmentService = (*segmentSrv.Service)(nil)
 
 type experimentService interface {
-	CreateBatch(ctx context.Context, experiments []*experimentModel.Experiment) error
-	DeleteBatch(ctx context.Context, experiments []*experimentModel.Experiment) error
+	CreateBatch(ctx context.Context, experiments []experimentModel.Experiment) error
+	DeleteBatch(ctx context.Context, experiments []experimentModel.Experiment) error
 }
 
 var _ experimentService = (*experimentSrv.Service)(nil)

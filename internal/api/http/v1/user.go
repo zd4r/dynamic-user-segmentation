@@ -164,7 +164,7 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	experimentsToAdd := make([]*experimentModel.Experiment, len(req.SegmentsToAdd))
+	experimentsToAdd := make([]experimentModel.Experiment, len(req.SegmentsToAdd))
 	for idx, slug := range req.SegmentsToAdd {
 		segmentWithId, err := r.segmentService.GetBySlug(ctx, slug)
 		if err != nil {
@@ -172,14 +172,14 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
-		experiment := &experimentModel.Experiment{
+		experiment := experimentModel.Experiment{
 			UserId:    userId,
 			SegmentId: segmentWithId.Id,
 		}
 		experimentsToAdd[idx] = experiment
 	}
 
-	experimentsToDelete := make([]*experimentModel.Experiment, len(req.SegmentsToRemove))
+	experimentsToDelete := make([]experimentModel.Experiment, len(req.SegmentsToRemove))
 	for idx, slug := range req.SegmentsToRemove {
 		segmentWithId, err := r.segmentService.GetBySlug(ctx, slug)
 		if err != nil {
@@ -187,7 +187,7 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
-		experiment := &experimentModel.Experiment{
+		experiment := experimentModel.Experiment{
 			UserId:    userId,
 			SegmentId: segmentWithId.Id,
 		}
