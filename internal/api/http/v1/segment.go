@@ -52,11 +52,7 @@ func (r *segmentRoutes) Delete(c echo.Context) error {
 
 	slug := strings.ToLower(c.Param("slug"))
 
-	segment := &segmentModel.Segment{
-		Slug: slug,
-	}
-
-	if err := r.segmentService.Delete(ctx, segment); err != nil {
+	if err := r.segmentService.DeleteBySlug(ctx, slug); err != nil {
 		log.Println(err) // TODO: logger
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
