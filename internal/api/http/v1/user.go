@@ -16,10 +16,10 @@ type userRoutes struct {
 	experimentService experimentService
 }
 
-func newUserRoutes(handler *echo.Group, userService userService) {
+func newUserRoutes(handler *echo.Group, userService userService, experimentService experimentService) {
 	r := &userRoutes{
-		userService: userService,
-		//experimentService: experimentService,
+		userService:       userService,
+		experimentService: experimentService,
 	}
 
 	handler.POST("/user", r.Create)

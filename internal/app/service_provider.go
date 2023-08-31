@@ -7,8 +7,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zd4r/dynamic-user-segmentation/internal/client/pg"
 	"github.com/zd4r/dynamic-user-segmentation/internal/config"
+	experimentRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/experiment"
 	segmentRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/segment"
 	userRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/user"
+	experimentSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/experiment"
 	segmentSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/segment"
 	userSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/user"
 	"github.com/zd4r/dynamic-user-segmentation/pkg/closer"
@@ -23,6 +25,9 @@ type serviceProvider struct {
 
 	segmentRepository *segmentRepo.Repository
 	segmentService    *segmentSrv.Service
+
+	experimentRepository *experimentRepo.Repository
+	experimentService    *experimentSrv.Service
 
 	pgClient pg.Client
 }
@@ -111,4 +116,20 @@ func (s *serviceProvider) GetSegmentService(ctx context.Context) *segmentSrv.Ser
 	}
 
 	return s.segmentService
+}
+
+func (s *serviceProvider) GetExperimentRepository(ctx context.Context) *experimentRepo.Repository {
+	if s.experimentRepository == nil {
+		s.experimentRepository = experimentRepo.NewRepository(s.GetPGClient(ctx))
+	}
+
+	return s.experimentRepository
+}
+
+func (s *serviceProvider) GetExperimentService(ctx context.Context) *experimentSrv.Service {
+	if s.experimentService == nil {
+		s.experimentService = experimentSrv.NewService(s.GetExperimentRepository(ctx))
+	}
+
+	return s.experimentService
 }
