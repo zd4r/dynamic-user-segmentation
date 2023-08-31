@@ -1,7 +1,9 @@
 package v1
 
 import (
+	"database/sql"
 	"encoding/csv"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -142,8 +144,14 @@ func (r *userRoutes) GetSegments(c echo.Context) error {
 }
 
 type updateUserSegmentsRequest struct {
-	SegmentsToAdd    []string `json:"segmentsToAdd"`
-	SegmentsToRemove []string `json:"segmentsToRemove"`
+	SegmentsToAdd []struct {
+		Slug     string     `json:"slug"`
+		ExpireAt *time.Time `json:"expireAt"`
+	} `json:"segmentsToAdd"`
+	SegmentsToRemove []struct {
+		Slug     string     `json:"slug"`
+		ExpireAt *time.Time `json:"expireAt"`
+	} `json:"segmentsToRemove"`
 }
 
 // UpdateUserSegments updates segments in which user consists
@@ -172,10 +180,12 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	experimentsToAdd := make([]experimentModel.Experiment, 0, len(req.SegmentsToAdd))
 	addRecords := make([]reportModel.Record, 0, len(req.SegmentsToAdd))
-	for _, slug := range req.SegmentsToAdd {
-		slug := strings.ToLower(slug)
+	removeRecords := make([]reportModel.Record, 0, len(req.SegmentsToRemove))
+
+	experimentsToAdd := make([]experimentModel.Experiment, 0, len(req.SegmentsToAdd))
+	for _, segment := range req.SegmentsToAdd {
+		slug := strings.ToLower(segment.Slug)
 		segmentWithId, err := r.segmentService.GetBySlug(ctx, slug)
 		if err != nil {
 			log.Println(err) // TODO: logger
@@ -186,20 +196,37 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 			UserId:    userId,
 			SegmentId: segmentWithId.Id,
 		}
+
+		if segment.ExpireAt != nil {
+			if !time.Now().Before(*segment.ExpireAt) {
+				log.Println("too early segment.ExpireAt")                                                          // TODO: logger
+				return echo.NewHTTPError(http.StatusInternalServerError, errors.New("too early segment.ExpireAt")) // TODO: Make common error
+			}
+			experiment.ExpireAt = sql.NullTime{
+				Time:  *segment.ExpireAt,
+				Valid: true,
+			}
+		}
 		experimentsToAdd = append(experimentsToAdd, experiment)
 
 		record := reportModel.Record{
 			UserId:      userId,
 			SegmentSlug: slug,
 			Action:      reportModel.AddAction,
+			Date:        time.Now(),
 		}
 		addRecords = append(addRecords, record)
+
+		if experiment.ExpireAt.Valid {
+			record.Action = reportModel.RemoveAction
+			record.Date = experiment.ExpireAt.Time
+			removeRecords = append(removeRecords, record)
+		}
 	}
 
 	experimentsToDelete := make([]experimentModel.Experiment, 0, len(req.SegmentsToRemove))
-	removeRecords := make([]reportModel.Record, 0, len(req.SegmentsToRemove))
-	for _, slug := range req.SegmentsToRemove {
-		slug := strings.ToLower(slug)
+	for _, segment := range req.SegmentsToRemove {
+		slug := strings.ToLower(segment.Slug)
 		segmentWithId, err := r.segmentService.GetBySlug(ctx, slug)
 		if err != nil {
 			log.Println(err) // TODO: logger
@@ -216,6 +243,7 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 			UserId:      userId,
 			SegmentSlug: slug,
 			Action:      reportModel.RemoveAction,
+			Date:        time.Now(),
 		}
 		removeRecords = append(removeRecords, record)
 	}
