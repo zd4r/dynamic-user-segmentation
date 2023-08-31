@@ -29,7 +29,7 @@ $ curl -X 'POST' \
 -H 'accept: application/json' \
 -H 'Content-Type: application/json' \
 -d '{
-      "slug": "AVITO_DISCOUNT_110"
+      "slug": "avito_discount_50"
     }'
 ```
 **Ответ:**
@@ -83,20 +83,30 @@ $ curl -X 'DELETE' \
 
 ### Изменение набора сегментов пользователя
 **Запрос:**
+
+`expireAt` - опциональное поле, формат: `YYYY-MM-DDTHH:MM:SSZ`.
+
 ```bash
 $ curl -X 'POST' \
   'http://localhost:8080/v1/user/1/segments' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-      "segmentsToAdd": [
-        "avito_discount_50",
-        "avito_voice_messages"
-      ],
-      "segmentsToRemove": [
-        "avito_performance_vas"
-      ]
-    }'
+  "segmentsToAdd": [
+    {
+      "slug": "avito_discount_50",
+      "expireAt": "2023-09-15T00:00:00Z"
+    },
+    {
+      "slug": "avito_voice_messages"
+    }
+  ],
+  "segmentsToRemove": [
+    {
+      "slug": "avito_voice_messages"
+    }
+  ]
+}'
 ```
 **Ответ:**
 
@@ -119,8 +129,7 @@ $ curl -X 'GET' \
 ```
 {
     "segments": [
-        "avito_discount_50",
-        "avito_voice_messages"
+        "avito_discount_50"
     ]
 }
 ```
@@ -136,6 +145,46 @@ curl -X 'GET' \
   -H 'accept: application/json'
 ```
 В результате данного запроса начнется загрузка файла с отчетом по пользователю в формате `CSV`. Подробнее с методом можно ознакомиться после запуска сервиса в [swagger документации](http://localhost:8080/docs/index.html#/user/get-user-report).
+
+## Доп. задание 2.
+Реализовать возможность задавать TTL (время автоматического удаления пользователя из сегмента)
+### Решение
+Опциональное добавление времени жизни сегмента для пользователя. Далее для соответствующих методов сервис проверяет, является ли сегмент актуальным для пользователя или нет, на основании этого поля.
+
+**Запрос:**
+
+`expireAt` - опциональное поле, формат: `YYYY-MM-DDTHH:MM:SSZ`.
+
+```bash
+$ curl -X 'POST' \
+  'http://localhost:8080/v1/user/1/segments' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "segmentsToAdd": [
+    {
+      "slug": "avito_discount_50",
+      "expireAt": "2023-09-15T00:00:00Z"
+    },
+    {
+      "slug": "avito_voice_messages"
+    }
+  ],
+  "segmentsToRemove": [
+    {
+      "slug": "avito_voice_messages"
+    }
+  ]
+}'
+```
+**Ответ:**
+
+`status code`: `200`
+
+`response body`: `null`
+
+Подробнее с методом можно ознакомиться после запуска сервиса в [swagger документации](http://localhost:8080/docs/index.html#/user/update-user-segmentsreport).
+
 ## TODO:
 * Unit и интеграционные тесты
 * Доп. задание 3
