@@ -1,14 +1,10 @@
 package segment
 
-import (
-	segmentRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/segment"
-)
-
 type Service struct {
-	segmentRepository *segmentRepo.Repository
+	segmentRepository segmentRepository
 }
 
-func NewService(segmentRepository *segmentRepo.Repository) *Service {
+func NewService(segmentRepository segmentRepository) *Service {
 	return &Service{
 		segmentRepository: segmentRepository,
 	}
