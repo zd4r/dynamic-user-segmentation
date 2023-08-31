@@ -71,7 +71,7 @@ func (r *Repository) GetRecordsInIntervalByUser(ctx context.Context, userId int,
 	if err != nil {
 		return nil, err
 	}
-	
+
 	q := pg.Query{
 		Name:     "report.GetRecordsInInterval",
 		QueryRaw: query,
