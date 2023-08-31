@@ -11,7 +11,7 @@ func NewRouter(userService userService, segmentService segmentService, experimen
 
 	h := handler.Group("/v1")
 	{
-		newUserRoutes(h, userService, experimentService)
+		newUserRoutes(h, userService, experimentService, segmentService)
 		newSegmentRoutes(h, segmentService)
 	}
 
