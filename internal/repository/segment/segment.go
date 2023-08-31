@@ -46,6 +46,33 @@ func (r *Repository) Create(ctx context.Context, segment *segmentModel.Segment) 
 	return nil
 }
 
+func (r *Repository) GetBySlug(ctx context.Context, segment *segmentModel.Segment) (*segmentModel.Segment, error) {
+	builder := sq.Select("id", "slug").
+		PlaceholderFormat(sq.Dollar).
+		From(segmentTableName).
+		Where(
+			sq.Eq{
+				"slug": segment.Slug,
+			},
+		).Limit(1)
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := pg.Query{
+		Name:     "segment.GetBySlug",
+		QueryRaw: query,
+	}
+
+	if err := r.client.PG().ScanOne(ctx, segment, q, args...); err != nil {
+		return nil, err
+	}
+
+	return segment, nil
+}
+
 func (r *Repository) Delete(ctx context.Context, segment *segmentModel.Segment) (int64, error) {
 	builder := sq.Delete(segmentTableName).
 		PlaceholderFormat(sq.Dollar).
