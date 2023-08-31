@@ -144,6 +144,7 @@ type updateUserSegmentsRequest struct {
 // @Tags        user
 // @ID          update-user-segments
 // @Accept      json
+// @Param       id path int true "User id"
 // @Param       updateUserSegmentsRequest body updateUserSegmentsRequest true "Contain segments to be added and deleted"
 // @Success     200
 // @Failure     400 {object} errorResponse
@@ -178,11 +179,6 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 		experimentsToAdd[idx] = experiment
 	}
 
-	if err := r.experimentService.CreateBatch(ctx, experimentsToAdd); err != nil {
-		log.Println(err) // TODO: logger
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
 	experimentsToDelete := make([]*experimentModel.Experiment, len(req.SegmentsToRemove))
 	for idx, slug := range req.SegmentsToRemove {
 		segmentWithId, err := r.segmentService.GetBySlug(ctx, slug)
@@ -196,6 +192,11 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 			SegmentId: segmentWithId.Id,
 		}
 		experimentsToDelete[idx] = experiment
+	}
+
+	if err := r.experimentService.CreateBatch(ctx, experimentsToAdd); err != nil {
+		log.Println(err) // TODO: logger
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	if err := r.experimentService.DeleteBatch(ctx, experimentsToDelete); err != nil {
