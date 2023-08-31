@@ -1,14 +1,10 @@
 package experiment
 
-import (
-	experimentRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/experiment"
-)
-
 type Service struct {
-	experimentRepository *experimentRepo.Repository
+	experimentRepository experimentRepository
 }
 
-func NewService(experimentRepository *experimentRepo.Repository) *Service {
+func NewService(experimentRepository experimentRepository) *Service {
 	return &Service{
 		experimentRepository: experimentRepository,
 	}
