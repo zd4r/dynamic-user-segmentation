@@ -8,9 +8,11 @@ import (
 	"github.com/zd4r/dynamic-user-segmentation/internal/client/pg"
 	"github.com/zd4r/dynamic-user-segmentation/internal/config"
 	experimentRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/experiment"
+	reportRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/report"
 	segmentRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/segment"
 	userRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/user"
 	experimentSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/experiment"
+	reportSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/report"
 	segmentSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/segment"
 	userSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/user"
 	"github.com/zd4r/dynamic-user-segmentation/pkg/closer"
@@ -28,6 +30,9 @@ type serviceProvider struct {
 
 	experimentRepository *experimentRepo.Repository
 	experimentService    *experimentSrv.Service
+
+	reportRepository *reportRepo.Repository
+	reportService    *reportSrv.Service
 
 	pgClient pg.Client
 }
@@ -132,4 +137,20 @@ func (s *serviceProvider) GetExperimentService(ctx context.Context) *experimentS
 	}
 
 	return s.experimentService
+}
+
+func (s *serviceProvider) GetReportRepository(ctx context.Context) *reportRepo.Repository {
+	if s.reportRepository == nil {
+		s.reportRepository = reportRepo.NewRepository(s.GetPGClient(ctx))
+	}
+
+	return s.reportRepository
+}
+
+func (s *serviceProvider) GetReportService(ctx context.Context) *reportSrv.Service {
+	if s.reportService == nil {
+		s.reportService = reportSrv.NewService(s.GetReportRepository(ctx))
+	}
+
+	return s.reportService
 }
