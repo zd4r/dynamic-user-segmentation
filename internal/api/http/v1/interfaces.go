@@ -2,10 +2,13 @@ package v1
 
 import (
 	"context"
+	"time"
 
 	experimentModel "github.com/zd4r/dynamic-user-segmentation/internal/model/experiment"
+	reportModel "github.com/zd4r/dynamic-user-segmentation/internal/model/report"
 	segmentModel "github.com/zd4r/dynamic-user-segmentation/internal/model/segment"
 	userModel "github.com/zd4r/dynamic-user-segmentation/internal/model/user"
+	reportSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/report"
 
 	experimentSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/experiment"
 	segmentSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/segment"
@@ -34,3 +37,10 @@ type experimentService interface {
 }
 
 var _ experimentService = (*experimentSrv.Service)(nil)
+
+type reportService interface {
+	CreateBatchRecord(ctx context.Context, records []reportModel.Record) error
+	GetRecordsInIntervalByUser(ctx context.Context, userId int, from, to time.Time) ([]reportModel.Record, error)
+}
+
+var _ reportService = (*reportSrv.Service)(nil)
