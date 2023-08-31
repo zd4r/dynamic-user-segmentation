@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/zd4r/dynamic-user-segmentation/internal/client/pg"
 	segmentModel "github.com/zd4r/dynamic-user-segmentation/internal/model/segment"
@@ -51,12 +50,12 @@ func (r *Repository) Create(ctx context.Context, user *userModel.User) error {
 	return nil
 }
 
-func (r *Repository) Delete(ctx context.Context, user *userModel.User) (int64, error) {
+func (r *Repository) Delete(ctx context.Context, userId int) (int64, error) {
 	builder := sq.Delete(userTableName).
 		PlaceholderFormat(sq.Dollar).
 		Where(
 			sq.Eq{
-				"id": user.Id,
+				"id": userId,
 			},
 		)
 
@@ -78,7 +77,7 @@ func (r *Repository) Delete(ctx context.Context, user *userModel.User) (int64, e
 	return ct.RowsAffected(), nil
 }
 
-func (r *Repository) GetSegments(ctx context.Context, user *userModel.User) ([]segmentModel.Segment, error) {
+func (r *Repository) GetSegments(ctx context.Context, userId int) ([]segmentModel.Segment, error) {
 	builder := sq.Select(fmt.Sprintf("%s.id", segmentTableName), fmt.Sprintf("%s.slug", segmentTableName)).
 		PlaceholderFormat(sq.Dollar).
 		From(segmentTableName).
@@ -86,7 +85,7 @@ func (r *Repository) GetSegments(ctx context.Context, user *userModel.User) ([]s
 		Join(fmt.Sprintf("%s ON %s.id = %s.user_id", userTableName, userTableName, experimentTableName)).
 		Where(
 			sq.Eq{
-				fmt.Sprintf("%s.id", userTableName): user.Id,
+				fmt.Sprintf("%s.id", userTableName): userId,
 			},
 		)
 
@@ -94,7 +93,6 @@ func (r *Repository) GetSegments(ctx context.Context, user *userModel.User) ([]s
 	if err != nil {
 		return nil, err
 	}
-	log.Println(query)
 
 	q := pg.Query{
 		Name:     "user.GetUserSegments",
