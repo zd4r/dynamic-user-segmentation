@@ -154,11 +154,11 @@ paths:
         name: id
         required: true
         type: integer
-      - description: report from time (inclusive)
+      - description: 'report from date [inclusive] (format: YYYY-MM)'
         in: query
         name: from
         type: string
-      - description: report to time (not inclusive)
+      - description: 'report to date [not inclusive] (format: YYYY-MM)'
         in: query
         name: to
         type: string

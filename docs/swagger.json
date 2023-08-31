@@ -181,13 +181,13 @@
                     },
                     {
                         "type": "string",
-                        "description": "report from time (inclusive)",
+                        "description": "report from date [inclusive] (format: YYYY-MM)",
                         "name": "from",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "report to time (not inclusive)",
+                        "description": "report to date [not inclusive] (format: YYYY-MM)",
                         "name": "to",
                         "in": "query"
                     }
