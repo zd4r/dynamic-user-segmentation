@@ -9,8 +9,8 @@ import (
 
 type segmentRepository interface {
 	Create(ctx context.Context, segment *segmentModel.Segment) error
-	Delete(ctx context.Context, segment *segmentModel.Segment) (int64, error)
-	GetBySlug(ctx context.Context, segment *segmentModel.Segment) (*segmentModel.Segment, error)
+	DeleteBySlug(ctx context.Context, slug string) (int64, error)
+	GetBySlug(ctx context.Context, slug string) (*segmentModel.Segment, error)
 }
 
 var _ segmentRepository = (*segmentRepo.Repository)(nil)
