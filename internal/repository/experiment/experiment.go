@@ -48,10 +48,10 @@ func (r *Repository) Create(ctx context.Context, experiment *experimentModel.Exp
 func (r *Repository) CreateBatch(ctx context.Context, experiments []experimentModel.Experiment) error {
 	builder := sq.Insert(experimentTableName).
 		PlaceholderFormat(sq.Dollar).
-		Columns("user_id", "segment_id")
+		Columns("user_id", "segment_id", "expire_at")
 
 	for _, experiment := range experiments {
-		builder = builder.Values(experiment.UserId, experiment.SegmentId)
+		builder = builder.Values(experiment.UserId, experiment.SegmentId, experiment.ExpireAt)
 	}
 
 	query, args, err := builder.ToSql()
@@ -128,7 +128,7 @@ func (r *Repository) DeleteBatch(ctx context.Context, experiments []experimentMo
 	}
 
 	q := pg.Query{
-		Name:     "experiment.Delete",
+		Name:     "experiment.DeleteBatch",
 		QueryRaw: query,
 	}
 
