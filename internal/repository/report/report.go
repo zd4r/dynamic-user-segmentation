@@ -26,10 +26,10 @@ func NewRepository(client pg.Client) *Repository {
 func (r *Repository) CreateBatchRecord(ctx context.Context, records []reportModel.Record) error {
 	builder := sq.Insert(reportTableName).
 		PlaceholderFormat(sq.Dollar).
-		Columns("user_id", "segment_slug", "action")
+		Columns("user_id", "segment_slug", "action", "date")
 
 	for _, record := range records {
-		builder = builder.Values(record.UserId, record.SegmentSlug, record.Action)
+		builder = builder.Values(record.UserId, record.SegmentSlug, record.Action, record.Date)
 	}
 
 	query, args, err := builder.ToSql()
