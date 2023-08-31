@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/zd4r/dynamic-user-segmentation/internal/client/pg"
 	segmentModel "github.com/zd4r/dynamic-user-segmentation/internal/model/segment"
@@ -84,8 +85,13 @@ func (r *Repository) GetSegments(ctx context.Context, userId int) ([]segmentMode
 		Join(fmt.Sprintf("%s ON %s.id = %s.segment_id", experimentTableName, segmentTableName, experimentTableName)).
 		Join(fmt.Sprintf("%s ON %s.id = %s.user_id", userTableName, userTableName, experimentTableName)).
 		Where(
-			sq.Eq{
-				fmt.Sprintf("%s.id", userTableName): userId,
+			sq.And{
+				sq.Eq{
+					fmt.Sprintf("%s.id", userTableName): userId,
+				},
+				sq.GtOrEq{
+					fmt.Sprintf("%s.expire_at", experimentTableName): time.Now(),
+				},
 			},
 		)
 
