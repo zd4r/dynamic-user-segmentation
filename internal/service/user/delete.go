@@ -4,11 +4,10 @@ import (
 	"context"
 
 	"github.com/zd4r/dynamic-user-segmentation/internal/errs"
-	userModel "github.com/zd4r/dynamic-user-segmentation/internal/model/user"
 )
 
-func (s *Service) Delete(ctx context.Context, user *userModel.User) error {
-	rowsAffected, err := s.userRepository.Delete(ctx, user)
+func (s *Service) Delete(ctx context.Context, userId int) error {
+	rowsAffected, err := s.userRepository.Delete(ctx, userId)
 	if err != nil {
 		return err
 	}

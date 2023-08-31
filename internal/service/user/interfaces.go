@@ -10,8 +10,8 @@ import (
 
 type userRepository interface {
 	Create(ctx context.Context, user *userModel.User) error
-	Delete(ctx context.Context, user *userModel.User) (int64, error)
-	GetSegments(ctx context.Context, user *userModel.User) ([]segmentModel.Segment, error)
+	Delete(ctx context.Context, userId int) (int64, error)
+	GetSegments(ctx context.Context, userId int) ([]segmentModel.Segment, error)
 }
 
 var _ userRepository = (*userRepo.Repository)(nil)
