@@ -26,6 +26,17 @@ type createSegmentRequest struct {
 	Slug string `json:"slug"`
 }
 
+// Create creates new segment
+// @Summary     Create new segment
+// @Description Create new segment for users to be put in
+// @Tags        segment
+// @ID          create-segment
+// @Accept      json
+// @Param       createSegmentRequest body createSegmentRequest true "Contain segment slug"
+// @Success     201
+// @Failure     400 {object} errorResponse
+// @Failure     500 {object} errorResponse
+// @Router      /segment [post]
 func (r *segmentRoutes) Create(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -47,6 +58,16 @@ func (r *segmentRoutes) Create(c echo.Context) error {
 	return c.JSON(http.StatusCreated, nil)
 }
 
+// Delete deletes segment
+// @Summary     Delete segment
+// @Description Delete segment
+// @Tags        segment
+// @ID          delete-segment
+// @Param       slug path string true "Segment slug"
+// @Success     200
+// @Failure     400 {object} errorResponse
+// @Failure     500 {object} errorResponse
+// @Router      /segment/{slug} [delete]
 func (r *segmentRoutes) Delete(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -57,5 +78,5 @@ func (r *segmentRoutes) Delete(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusCreated, nil)
+	return c.JSON(http.StatusOK, nil)
 }

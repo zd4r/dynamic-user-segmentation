@@ -36,6 +36,17 @@ type createUserRequest struct {
 	Id int `json:"id"`
 }
 
+// Create creates new user
+// @Summary     Create new user
+// @Description Create new user
+// @Tags        user
+// @ID          create-user
+// @Accept      json
+// @Param       createUserRequest body createUserRequest true "Contain user id"
+// @Success     201
+// @Failure     400 {object} errorResponse
+// @Failure     500 {object} errorResponse
+// @Router      /user [post]
 func (r *userRoutes) Create(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -57,6 +68,16 @@ func (r *userRoutes) Create(c echo.Context) error {
 	return c.JSON(http.StatusCreated, nil)
 }
 
+// Delete deletes user
+// @Summary     Delete user
+// @Description Delete user
+// @Tags        user
+// @ID          delete-user
+// @Param       id path int true "User id"
+// @Success     200
+// @Failure     400 {object} errorResponse
+// @Failure     500 {object} errorResponse
+// @Router      /user/{id} [delete]
 func (r *userRoutes) Delete(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -77,6 +98,17 @@ type getUserSegmentsResponse struct {
 	Segments []string `json:"segments"`
 }
 
+// GetSegments returns segments in which user consists
+// @Summary     Get user's segments
+// @Description Get segments in which user consists
+// @Tags        user
+// @ID          user-segments
+// @Produce      json
+// @Param       id path int true "User id"
+// @Success     200 {object} getUserSegmentsResponse
+// @Failure     400 {object} errorResponse
+// @Failure     500 {object} errorResponse
+// @Router      /user/{id}/segments [get]
 func (r *userRoutes) GetSegments(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -106,6 +138,17 @@ type updateUserSegmentsRequest struct {
 	SegmentsToRemove []string `json:"segmentsToRemove"`
 }
 
+// UpdateUserSegments updates segments in which user consists
+// @Summary     Update user's segments
+// @Description Updates segments in which user consists
+// @Tags        user
+// @ID          update-user-segments
+// @Accept      json
+// @Param       updateUserSegmentsRequest body updateUserSegmentsRequest true "Contain segments to be added and deleted"
+// @Success     200
+// @Failure     400 {object} errorResponse
+// @Failure     500 {object} errorResponse
+// @Router      /user/{id}/segments [post]
 func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 	ctx := c.Request().Context()
 

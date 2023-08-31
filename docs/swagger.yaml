@@ -1,0 +1,200 @@
+basePath: /v1
+definitions:
+  v1.createSegmentRequest:
+    properties:
+      slug:
+        type: string
+    type: object
+  v1.createUserRequest:
+    properties:
+      id:
+        type: integer
+    type: object
+  v1.errorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  v1.getUserSegmentsResponse:
+    properties:
+      segments:
+        items:
+          type: string
+        type: array
+    type: object
+  v1.updateUserSegmentsRequest:
+    properties:
+      segmentsToAdd:
+        items:
+          type: string
+        type: array
+      segmentsToRemove:
+        items:
+          type: string
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Dynamic user segmentation service. Stores users and segments they belong
+    to.
+  title: Dynamic user segmentation API
+  version: "1.0"
+paths:
+  /segment:
+    post:
+      consumes:
+      - application/json
+      description: Create new segment for users to be put in
+      operationId: create-segment
+      parameters:
+      - description: Contain segment slug
+        in: body
+        name: createSegmentRequest
+        required: true
+        schema:
+          $ref: '#/definitions/v1.createSegmentRequest'
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+      summary: Create new segment
+      tags:
+      - segment
+  /segment/{slug}:
+    delete:
+      description: Delete segment
+      operationId: delete-segment
+      parameters:
+      - description: Segment slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+      summary: Delete segment
+      tags:
+      - segment
+  /user:
+    post:
+      consumes:
+      - application/json
+      description: Create new user
+      operationId: create-user
+      parameters:
+      - description: Contain user id
+        in: body
+        name: createUserRequest
+        required: true
+        schema:
+          $ref: '#/definitions/v1.createUserRequest'
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+      summary: Create new user
+      tags:
+      - user
+  /user/{id}:
+    delete:
+      description: Delete user
+      operationId: delete-user
+      parameters:
+      - description: User id
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+      summary: Delete user
+      tags:
+      - user
+  /user/{id}/segments:
+    get:
+      description: Get segments in which user consists
+      operationId: user-segments
+      parameters:
+      - description: User id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.getUserSegmentsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+      summary: Get user's segments
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: Updates segments in which user consists
+      operationId: update-user-segments
+      parameters:
+      - description: Contain segments to be added and deleted
+        in: body
+        name: updateUserSegmentsRequest
+        required: true
+        schema:
+          $ref: '#/definitions/v1.updateUserSegmentsRequest'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errorResponse'
+      summary: Update user's segments
+      tags:
+      - user
+swagger: "2.0"
