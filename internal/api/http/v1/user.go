@@ -247,8 +247,8 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 // @Tags        user
 // @ID          get-user-report
 // @Param       id path int true "User id"
-// @Param       from    query     string  false  "report from time (inclusive)"
-// @Param       to      query     string  false  "report to time (not inclusive)"
+// @Param       from    query     string  false  "report from date [inclusive] (format: YYYY-MM)"
+// @Param       to      query     string  false  "report to date [not inclusive] (format: YYYY-MM)"
 // @Success		200
 // @Failure     400 {object} errorResponse
 // @Failure     500 {object} errorResponse
