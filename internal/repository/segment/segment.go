@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/zd4r/dynamic-user-segmentation/internal/client/pg"
+
 	segmentModel "github.com/zd4r/dynamic-user-segmentation/internal/model/segment"
 
 	sq "github.com/Masterminds/squirrel"
@@ -46,13 +47,13 @@ func (r *Repository) Create(ctx context.Context, segment *segmentModel.Segment) 
 	return nil
 }
 
-func (r *Repository) GetBySlug(ctx context.Context, segment *segmentModel.Segment) (*segmentModel.Segment, error) {
+func (r *Repository) GetBySlug(ctx context.Context, slug string) (*segmentModel.Segment, error) {
 	builder := sq.Select("id", "slug").
 		PlaceholderFormat(sq.Dollar).
 		From(segmentTableName).
 		Where(
 			sq.Eq{
-				"slug": segment.Slug,
+				"slug": slug,
 			},
 		).Limit(1)
 
@@ -66,6 +67,7 @@ func (r *Repository) GetBySlug(ctx context.Context, segment *segmentModel.Segmen
 		QueryRaw: query,
 	}
 
+	segment := new(segmentModel.Segment)
 	if err := r.client.PG().ScanOne(ctx, segment, q, args...); err != nil {
 		return nil, err
 	}
@@ -73,12 +75,12 @@ func (r *Repository) GetBySlug(ctx context.Context, segment *segmentModel.Segmen
 	return segment, nil
 }
 
-func (r *Repository) Delete(ctx context.Context, segment *segmentModel.Segment) (int64, error) {
+func (r *Repository) DeleteBySlug(ctx context.Context, slug string) (int64, error) {
 	builder := sq.Delete(segmentTableName).
 		PlaceholderFormat(sq.Dollar).
 		Where(
 			sq.Eq{
-				"slug": segment.Slug,
+				"slug": slug,
 			},
 		)
 
