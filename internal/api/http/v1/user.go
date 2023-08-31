@@ -1,11 +1,15 @@
 package v1
 
 import (
+	"encoding/csv"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	experimentModel "github.com/zd4r/dynamic-user-segmentation/internal/model/experiment"
+	reportModel "github.com/zd4r/dynamic-user-segmentation/internal/model/report"
 	userModel "github.com/zd4r/dynamic-user-segmentation/internal/model/user"
 
 	"github.com/labstack/echo/v4"
@@ -16,13 +20,15 @@ type userRoutes struct {
 	userService       userService
 	experimentService experimentService
 	segmentService    segmentService
+	reportService     reportService
 }
 
-func newUserRoutes(handler *echo.Group, userService userService, experimentService experimentService, segmentService segmentService) {
+func newUserRoutes(handler *echo.Group, userService userService, experimentService experimentService, segmentService segmentService, reportService reportService) {
 	r := &userRoutes{
 		userService:       userService,
 		experimentService: experimentService,
 		segmentService:    segmentService,
+		reportService:     reportService,
 	}
 
 	handler.POST("/user", r.Create)
@@ -30,6 +36,8 @@ func newUserRoutes(handler *echo.Group, userService userService, experimentServi
 
 	handler.GET("/user/:id/segments", r.GetSegments)
 	handler.POST("/user/:id/segments", r.UpdateUserSegments)
+
+	handler.GET("/user/:id/report", r.GetReport)
 }
 
 type createUserRequest struct {
@@ -164,8 +172,10 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	experimentsToAdd := make([]experimentModel.Experiment, len(req.SegmentsToAdd))
-	for idx, slug := range req.SegmentsToAdd {
+	experimentsToAdd := make([]experimentModel.Experiment, 0, len(req.SegmentsToAdd))
+	addRecords := make([]reportModel.Record, 0, len(req.SegmentsToAdd))
+	for _, slug := range req.SegmentsToAdd {
+		slug := strings.ToLower(slug)
 		segmentWithId, err := r.segmentService.GetBySlug(ctx, slug)
 		if err != nil {
 			log.Println(err) // TODO: logger
@@ -176,11 +186,20 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 			UserId:    userId,
 			SegmentId: segmentWithId.Id,
 		}
-		experimentsToAdd[idx] = experiment
+		experimentsToAdd = append(experimentsToAdd, experiment)
+
+		record := reportModel.Record{
+			UserId:      userId,
+			SegmentSlug: slug,
+			Action:      reportModel.AddAction,
+		}
+		addRecords = append(addRecords, record)
 	}
 
-	experimentsToDelete := make([]experimentModel.Experiment, len(req.SegmentsToRemove))
-	for idx, slug := range req.SegmentsToRemove {
+	experimentsToDelete := make([]experimentModel.Experiment, 0, len(req.SegmentsToRemove))
+	removeRecords := make([]reportModel.Record, 0, len(req.SegmentsToRemove))
+	for _, slug := range req.SegmentsToRemove {
+		slug := strings.ToLower(slug)
 		segmentWithId, err := r.segmentService.GetBySlug(ctx, slug)
 		if err != nil {
 			log.Println(err) // TODO: logger
@@ -191,10 +210,21 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 			UserId:    userId,
 			SegmentId: segmentWithId.Id,
 		}
-		experimentsToDelete[idx] = experiment
+		experimentsToDelete = append(experimentsToDelete, experiment)
+
+		record := reportModel.Record{
+			UserId:      userId,
+			SegmentSlug: slug,
+			Action:      reportModel.RemoveAction,
+		}
+		removeRecords = append(removeRecords, record)
 	}
 
 	if err := r.experimentService.CreateBatch(ctx, experimentsToAdd); err != nil {
+		log.Println(err) // TODO: logger
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	if err := r.reportService.CreateBatchRecord(ctx, addRecords); err != nil {
 		log.Println(err) // TODO: logger
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -203,6 +233,63 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 		log.Println(err) // TODO: logger
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	if err := r.reportService.CreateBatchRecord(ctx, removeRecords); err != nil {
+		log.Println(err) // TODO: logger
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 
 	return c.JSON(http.StatusOK, nil)
+}
+
+func (r *userRoutes) GetReport(c echo.Context) error {
+	const (
+		dateLayout = "2006-01"
+	)
+
+	ctx := c.Request().Context()
+
+	userId, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, errs.ErrInvalidUserId.Error())
+	}
+
+	from := c.QueryParam("from")
+	to := c.QueryParam("to")
+
+	var fromDate, toDate = time.Time{}, time.Now()
+
+	if from != "" {
+		fromDate, err = time.Parse(dateLayout, from)
+		if err != nil {
+			log.Println(err) // TODO: logger
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	if to != "" {
+		toDate, err = time.Parse(dateLayout, to)
+		if err != nil {
+			log.Println(err) // TODO: logger
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	report, err := r.reportService.GetRecordsInIntervalByUser(ctx, userId, fromDate, toDate)
+	if err != nil {
+		log.Println(err) // TODO: logger
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	reportCSV := make([][]string, 0, len(report)+1)
+	reportCSV = append(reportCSV, reportModel.GetCSVHeader())
+	for _, record := range report {
+		reportCSV = append(reportCSV, record.ToCSV())
+	}
+
+	c.Response().Header().Set(echo.HeaderContentType, "text/csv")
+	c.Response().Header().Set(echo.HeaderContentDisposition, "attachment;filename=report.csv")
+
+	w := csv.NewWriter(c.Response().Writer)
+
+	return w.WriteAll(reportCSV)
 }
