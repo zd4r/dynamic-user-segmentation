@@ -222,6 +222,13 @@ const docTemplate = `{
                 "operationId": "update-user-segments",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "User id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Contain segments to be added and deleted",
                         "name": "updateUserSegmentsRequest",
                         "in": "body",

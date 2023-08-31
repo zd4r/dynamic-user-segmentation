@@ -177,6 +177,11 @@ paths:
       description: Updates segments in which user consists
       operationId: update-user-segments
       parameters:
+      - description: User id
+        in: path
+        name: id
+        required: true
+        type: integer
       - description: Contain segments to be added and deleted
         in: body
         name: updateUserSegmentsRequest
