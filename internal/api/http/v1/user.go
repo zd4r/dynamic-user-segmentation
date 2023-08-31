@@ -148,7 +148,7 @@ type updateUserSegmentsRequest struct {
 
 // UpdateUserSegments updates segments in which user consists
 // @Summary     Update user's segments
-// @Description Updates segments in which user consists
+// @Description Update segments in which user consists
 // @Tags        user
 // @ID          update-user-segments
 // @Accept      json
@@ -241,6 +241,18 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
+// GetReport creates report in CSV format with user actions within a given time range
+// @Summary     Create report in CSV format
+// @Description Create report in CSV format with user actions within a given time range
+// @Tags        user
+// @ID          get-user-report
+// @Param       id path int true "User id"
+// @Param       from    query     string  false  "report from time (inclusive)"
+// @Param       to      query     string  false  "report to time (not inclusive)"
+// @Success		200
+// @Failure     400 {object} errorResponse
+// @Failure     500 {object} errorResponse
+// @Router      /user/{id}/report [get]
 func (r *userRoutes) GetReport(c echo.Context) error {
 	const (
 		dateLayout = "2006-01"

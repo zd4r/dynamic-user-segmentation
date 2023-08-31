@@ -169,6 +169,54 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/{id}/report": {
+            "get": {
+                "description": "Create report in CSV format with user actions within a given time range",
+                "tags": [
+                    "user"
+                ],
+                "summary": "Create report in CSV format",
+                "operationId": "get-user-report",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "report from time (inclusive)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "report to time (not inclusive)",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/user/{id}/segments": {
             "get": {
                 "description": "Get segments in which user consists",
@@ -211,7 +259,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Updates segments in which user consists",
+                "description": "Update segments in which user consists",
                 "consumes": [
                     "application/json"
                 ],
