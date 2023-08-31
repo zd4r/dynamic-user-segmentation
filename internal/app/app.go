@@ -13,6 +13,8 @@ import (
 	"github.com/zd4r/dynamic-user-segmentation/pkg/httpserver"
 )
 
+const serviceName = "api"
+
 type App struct {
 	serviceProvider *serviceProvider
 
@@ -82,6 +84,7 @@ func (a *App) initHTTPServer(ctx context.Context) error {
 		a.serviceProvider.GetSegmentService(ctx),
 		a.serviceProvider.GetExperimentService(ctx),
 		a.serviceProvider.GetReportService(ctx),
+		a.serviceProvider.GetLogger(serviceName),
 	)
 
 	a.httpServer = httpserver.New(

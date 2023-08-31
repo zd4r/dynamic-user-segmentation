@@ -1,21 +1,23 @@
 package v1
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v4"
 	segmentModel "github.com/zd4r/dynamic-user-segmentation/internal/model/segment"
+	"go.uber.org/zap"
 )
 
 type segmentRoutes struct {
 	segmentService segmentService
+	log            *zap.Logger
 }
 
-func newSegmentRoutes(handler *echo.Group, segmentService segmentService) {
+func newSegmentRoutes(handler *echo.Group, segmentService segmentService, log *zap.Logger) {
 	r := &segmentRoutes{
 		segmentService: segmentService,
+		log:            log.Named("SegmentRoutes"),
 	}
 
 	handler.POST("/segment", r.Create)
@@ -38,11 +40,12 @@ type createSegmentRequest struct {
 // @Failure     500 {object} errorResponse
 // @Router      /segment [post]
 func (r *segmentRoutes) Create(c echo.Context) error {
+	l := r.log.Named("Create")
 	ctx := c.Request().Context()
 
 	req := new(createSegmentRequest)
 	if err := c.Bind(req); err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("c.Bind", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
@@ -51,7 +54,7 @@ func (r *segmentRoutes) Create(c echo.Context) error {
 	}
 
 	if err := r.segmentService.Create(ctx, segment); err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("r.segmentService.Create", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -69,12 +72,13 @@ func (r *segmentRoutes) Create(c echo.Context) error {
 // @Failure     500 {object} errorResponse
 // @Router      /segment/{slug} [delete]
 func (r *segmentRoutes) Delete(c echo.Context) error {
+	l := r.log.Named("Delete")
 	ctx := c.Request().Context()
 
 	slug := strings.ToLower(c.Param("slug"))
 
 	if err := r.segmentService.DeleteBySlug(ctx, slug); err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("r.segmentService.DeleteBySlug", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 

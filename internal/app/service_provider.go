@@ -16,11 +16,14 @@ import (
 	segmentSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/segment"
 	userSrv "github.com/zd4r/dynamic-user-segmentation/internal/service/user"
 	"github.com/zd4r/dynamic-user-segmentation/pkg/closer"
+	"github.com/zd4r/dynamic-user-segmentation/pkg/logger"
+	"go.uber.org/zap"
 )
 
 type serviceProvider struct {
-	pgConfig   config.PGConfig
-	httpConfig config.HTTPConfig
+	pgConfig     config.PGConfig
+	httpConfig   config.HTTPConfig
+	LoggerConfig config.LoggerConfig
 
 	userRepository *userRepo.Repository
 	userService    *userSrv.Service
@@ -65,6 +68,19 @@ func (s *serviceProvider) GetHTTPConfig() config.HTTPConfig {
 	}
 
 	return s.httpConfig
+}
+
+func (s *serviceProvider) GetLoggerConfig() config.LoggerConfig {
+	if s.LoggerConfig == nil {
+		cfg, err := config.NewLoggerLevel()
+		if err != nil {
+			log.Fatalf("failed to get logger config: %s", err.Error())
+		}
+
+		s.LoggerConfig = cfg
+	}
+
+	return s.LoggerConfig
 }
 
 func (s *serviceProvider) GetPGClient(ctx context.Context) pg.Client {
@@ -153,4 +169,22 @@ func (s *serviceProvider) GetReportService(ctx context.Context) *reportSrv.Servi
 	}
 
 	return s.reportService
+}
+
+func (s *serviceProvider) GetLogger(namespace string) *zap.Logger {
+	lvl := s.GetLoggerConfig().LogLevel()
+	switch lvl {
+	case "FATAL":
+		return logger.NewLogger(zap.FatalLevel, namespace)
+	case "ERROR":
+		return logger.NewLogger(zap.ErrorLevel, namespace)
+	case "WARN":
+		return logger.NewLogger(zap.WarnLevel, namespace)
+	case "INFO":
+		return logger.NewLogger(zap.InfoLevel, namespace)
+	case "DEBUG":
+		return logger.NewLogger(zap.DebugLevel, namespace)
+	}
+
+	return logger.NewLogger(zap.DebugLevel, namespace)
 }

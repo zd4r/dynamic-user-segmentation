@@ -3,8 +3,6 @@ package v1
 import (
 	"database/sql"
 	"encoding/csv"
-	"errors"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,6 +11,7 @@ import (
 	experimentModel "github.com/zd4r/dynamic-user-segmentation/internal/model/experiment"
 	reportModel "github.com/zd4r/dynamic-user-segmentation/internal/model/report"
 	userModel "github.com/zd4r/dynamic-user-segmentation/internal/model/user"
+	"go.uber.org/zap"
 
 	"github.com/labstack/echo/v4"
 	"github.com/zd4r/dynamic-user-segmentation/internal/errs"
@@ -23,14 +22,16 @@ type userRoutes struct {
 	experimentService experimentService
 	segmentService    segmentService
 	reportService     reportService
+	log               *zap.Logger
 }
 
-func newUserRoutes(handler *echo.Group, userService userService, experimentService experimentService, segmentService segmentService, reportService reportService) {
+func newUserRoutes(handler *echo.Group, userService userService, experimentService experimentService, segmentService segmentService, reportService reportService, log *zap.Logger) {
 	r := &userRoutes{
 		userService:       userService,
 		experimentService: experimentService,
 		segmentService:    segmentService,
 		reportService:     reportService,
+		log:               log.Named("UserRoutes"),
 	}
 
 	handler.POST("/user", r.Create)
@@ -58,11 +59,12 @@ type createUserRequest struct {
 // @Failure     500 {object} errorResponse
 // @Router      /user [post]
 func (r *userRoutes) Create(c echo.Context) error {
+	l := r.log.Named("Create")
 	ctx := c.Request().Context()
 
 	req := new(createUserRequest)
 	if err := c.Bind(req); err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("c.Bind", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
@@ -71,7 +73,7 @@ func (r *userRoutes) Create(c echo.Context) error {
 	}
 
 	if err := r.userService.Create(ctx, user); err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("r.userService.Create", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -89,15 +91,17 @@ func (r *userRoutes) Create(c echo.Context) error {
 // @Failure     500 {object} errorResponse
 // @Router      /user/{id} [delete]
 func (r *userRoutes) Delete(c echo.Context) error {
+	l := r.log.Named("Delete")
 	ctx := c.Request().Context()
 
 	userId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		l.Error("strconv.Atoi", zap.Error(errs.ErrInvalidUserId))
 		return echo.NewHTTPError(http.StatusBadRequest, errs.ErrInvalidUserId.Error())
 	}
 
 	if err := r.userService.Delete(ctx, userId); err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("r.userService.Delete", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -120,16 +124,18 @@ type getUserSegmentsResponse struct {
 // @Failure     500 {object} errorResponse
 // @Router      /user/{id}/segments [get]
 func (r *userRoutes) GetSegments(c echo.Context) error {
+	l := r.log.Named("GetSegments")
 	ctx := c.Request().Context()
 
 	userId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		l.Error("strconv.Atoi", zap.Error(errs.ErrInvalidUserId))
 		return echo.NewHTTPError(http.StatusBadRequest, errs.ErrInvalidUserId.Error())
 	}
 
 	segments, err := r.userService.GetSegments(ctx, userId)
 	if err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("r.userService.GetSegments", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -167,16 +173,18 @@ type updateUserSegmentsRequest struct {
 // @Failure     500 {object} errorResponse
 // @Router      /user/{id}/segments [post]
 func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
+	l := r.log.Named("UpdateUserSegments")
 	ctx := c.Request().Context()
 
 	userId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		l.Error("strconv.Atoi", zap.Error(errs.ErrInvalidUserId))
 		return echo.NewHTTPError(http.StatusBadRequest, errs.ErrInvalidUserId.Error())
 	}
 
 	req := new(updateUserSegmentsRequest)
 	if err := c.Bind(req); err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("c.Bind", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
@@ -188,7 +196,7 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 		slug := strings.ToLower(segment.Slug)
 		segmentWithId, err := r.segmentService.GetBySlug(ctx, slug)
 		if err != nil {
-			log.Println(err) // TODO: logger
+			l.Error("r.segmentService.GetBySlug", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
@@ -199,8 +207,8 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 
 		if segment.ExpireAt != nil {
 			if !time.Now().Before(*segment.ExpireAt) {
-				log.Println("too early segment.ExpireAt")                                                          // TODO: logger
-				return echo.NewHTTPError(http.StatusInternalServerError, errors.New("too early segment.ExpireAt")) // TODO: Make common error
+				l.Error("time.Now().Before", zap.Error(errs.ErrInvalidExpireAtTime))
+				return echo.NewHTTPError(http.StatusInternalServerError, errs.ErrInvalidExpireAtTime)
 			}
 			experiment.ExpireAt = sql.NullTime{
 				Time:  *segment.ExpireAt,
@@ -229,7 +237,7 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 		slug := strings.ToLower(segment.Slug)
 		segmentWithId, err := r.segmentService.GetBySlug(ctx, slug)
 		if err != nil {
-			log.Println(err) // TODO: logger
+			l.Error("r.segmentService.GetBySlug", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
@@ -249,20 +257,20 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 	}
 
 	if err := r.experimentService.CreateBatch(ctx, experimentsToAdd); err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("r.experimentService.CreateBatch", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	if err := r.reportService.CreateBatchRecord(ctx, addRecords); err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("r.reportService.CreateBatchRecord", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	if err := r.experimentService.DeleteBatch(ctx, experimentsToDelete); err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("r.experimentService.DeleteBatch", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	if err := r.reportService.CreateBatchRecord(ctx, removeRecords); err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("r.reportService.CreateBatchRecord", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -286,10 +294,12 @@ func (r *userRoutes) GetReport(c echo.Context) error {
 		dateLayout = "2006-01"
 	)
 
+	l := r.log.Named("GetReport")
 	ctx := c.Request().Context()
 
 	userId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
+		l.Error("strconv.Atoi", zap.Error(errs.ErrInvalidUserId))
 		return echo.NewHTTPError(http.StatusBadRequest, errs.ErrInvalidUserId.Error())
 	}
 
@@ -301,7 +311,7 @@ func (r *userRoutes) GetReport(c echo.Context) error {
 	if from != "" {
 		fromDate, err = time.Parse(dateLayout, from)
 		if err != nil {
-			log.Println(err) // TODO: logger
+			l.Error("time.Parse", zap.Error(err))
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 	}
@@ -309,14 +319,14 @@ func (r *userRoutes) GetReport(c echo.Context) error {
 	if to != "" {
 		toDate, err = time.Parse(dateLayout, to)
 		if err != nil {
-			log.Println(err) // TODO: logger
+			l.Error("time.Parse", zap.Error(err))
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 	}
 
 	report, err := r.reportService.GetRecordsInIntervalByUser(ctx, userId, fromDate, toDate)
 	if err != nil {
-		log.Println(err) // TODO: logger
+		l.Error("r.reportService.GetRecordsInIntervalByUser", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
