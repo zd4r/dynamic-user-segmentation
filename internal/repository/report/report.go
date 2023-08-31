@@ -2,7 +2,6 @@ package report
 
 import (
 	"context"
-	"log"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -72,9 +71,7 @@ func (r *Repository) GetRecordsInIntervalByUser(ctx context.Context, userId int,
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println(query)
-
+	
 	q := pg.Query{
 		Name:     "report.GetRecordsInInterval",
 		QueryRaw: query,
