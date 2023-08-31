@@ -81,6 +81,7 @@ func (a *App) initHTTPServer(ctx context.Context) error {
 		a.serviceProvider.GetUserService(ctx),
 		a.serviceProvider.GetSegmentService(ctx),
 		a.serviceProvider.GetExperimentService(ctx),
+		a.serviceProvider.GetReportService(ctx),
 	)
 
 	a.httpServer = httpserver.New(
