@@ -13,23 +13,24 @@ import (
 )
 
 type userService interface {
-	Delete(ctx context.Context, user *userModel.User) error
 	Create(ctx context.Context, user *userModel.User) error
-	GetSegments(ctx context.Context, user *userModel.User) ([]segmentModel.Segment, error)
+	Delete(ctx context.Context, userId int) error
+	GetSegments(ctx context.Context, userId int) ([]segmentModel.Segment, error)
 }
 
 var _ userService = (*userSrv.Service)(nil)
 
 type segmentService interface {
-	Delete(ctx context.Context, segment *segmentModel.Segment) error
 	Create(ctx context.Context, segment *segmentModel.Segment) error
+	DeleteBySlug(ctx context.Context, slug string) error
+	GetBySlug(ctx context.Context, slug string) (*segmentModel.Segment, error)
 }
 
 var _ segmentService = (*segmentSrv.Service)(nil)
 
 type experimentService interface {
-	Delete(ctx context.Context, segment *experimentModel.Experiment) error
-	Create(ctx context.Context, segment *experimentModel.Experiment) error
+	CreateBatch(ctx context.Context, experiments []*experimentModel.Experiment) error
+	DeleteBatch(ctx context.Context, experiments []*experimentModel.Experiment) error
 }
 
 var _ experimentService = (*experimentSrv.Service)(nil)
