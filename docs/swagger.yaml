@@ -26,11 +26,21 @@ definitions:
     properties:
       segmentsToAdd:
         items:
-          type: string
+          properties:
+            expireAt:
+              type: string
+            slug:
+              type: string
+          type: object
         type: array
       segmentsToRemove:
         items:
-          type: string
+          properties:
+            expireAt:
+              type: string
+            slug:
+              type: string
+          type: object
         type: array
     type: object
 host: localhost:8080
