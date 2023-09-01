@@ -30,12 +30,12 @@ func newSegmentRoutes(handler *echo.Group, segmentService segmentService, experi
 	}
 
 	handler.POST("/segment", r.Create)
-	handler.POST("/segment-auto-fill", r.CreateAutoFill)
 	handler.DELETE("/segment/:slug", r.Delete)
 }
 
 type createSegmentRequest struct {
-	Slug string `json:"slug"`
+	Slug         string `json:"slug"`
+	UsersPercent *int   `json:"usersPercent"`
 }
 
 // Create creates new segment
@@ -59,11 +59,59 @@ func (r *segmentRoutes) Create(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	if req.UsersPercent != nil {
+		if *req.UsersPercent < 0 || *req.UsersPercent > 100 {
+			l.Error("req.UsersPercent", zap.Error(errs.ErrInvalidUserPercent))
+			return echo.NewHTTPError(http.StatusBadRequest, errs.ErrInvalidUserPercent)
+		}
+	}
+
 	slug := strings.ToLower(req.Slug)
 
 	if err := r.segmentService.Create(ctx, slug); err != nil {
 		l.Error("r.segmentService.Create", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if req.UsersPercent != nil {
+		segment, err := r.segmentService.GetBySlug(ctx, slug)
+		if err != nil {
+			l.Error("r.segmentService.GetBySlug", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+
+		users, err := r.userService.GetPercentOfAllUsers(ctx, *req.UsersPercent)
+		if err != nil {
+			l.Error("r.userService.GetPercentOfAllUsers", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+
+		addRecords := make([]reportModel.Record, 0, len(users))
+		experimentsToAdd := make([]experimentModel.Experiment, 0, len(users))
+		for _, user := range users {
+			experiment := experimentModel.Experiment{
+				UserId:    user.Id,
+				SegmentId: segment.Id,
+			}
+			experimentsToAdd = append(experimentsToAdd, experiment)
+
+			record := reportModel.Record{
+				UserId:      user.Id,
+				SegmentSlug: segment.Slug,
+				Action:      reportModel.AddAction,
+				Date:        time.Now(),
+			}
+			addRecords = append(addRecords, record)
+		}
+
+		if err := r.experimentService.CreateBatch(ctx, experimentsToAdd); err != nil {
+			l.Error("r.experimentService.CreateBatch", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+		if err := r.reportService.CreateBatchRecord(ctx, addRecords); err != nil {
+			l.Error("r.reportService.CreateBatchRecord", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
 	}
 
 	return c.JSON(http.StatusCreated, nil)
@@ -91,84 +139,4 @@ func (r *segmentRoutes) Delete(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, nil)
-}
-
-type createSegmentAutoFillRequest struct {
-	Slug         string `json:"slug"`
-	UsersPercent int    `json:"usersPercent"`
-}
-
-// CreateAutoFill creates new segment with given percent of current users
-// @Summary     Create new segment with given percent of current users
-// @Description Create new segment and automatically fill it with given percent of current existing users
-// @Tags        segment
-// @ID          create-segment-auto-fill
-// @Accept      json
-// @Param       createSegmentAutoFillRequest body createSegmentAutoFillRequest true "Contain segment slug"
-// @Success     201
-// @Failure     400 {object} errorResponse
-// @Failure     500 {object} errorResponse
-// @Router      /segment-auto-fill [post]
-func (r *segmentRoutes) CreateAutoFill(c echo.Context) error {
-	l := r.log.Named("CreateAutoFill")
-	ctx := c.Request().Context()
-
-	req := new(createSegmentAutoFillRequest)
-	if err := c.Bind(req); err != nil {
-		l.Error("c.Bind", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	if req.UsersPercent < 0 || req.UsersPercent > 100 {
-		l.Error("req.UsersPercent", zap.Error(errs.ErrInvalidUserPercent))
-		return echo.NewHTTPError(http.StatusBadRequest, errs.ErrInvalidUserPercent)
-	}
-
-	slug := strings.ToLower(req.Slug)
-
-	if err := r.segmentService.Create(ctx, slug); err != nil {
-		l.Error("r.segmentService.Create", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
-	}
-
-	segment, err := r.segmentService.GetBySlug(ctx, slug)
-	if err != nil {
-		l.Error("r.segmentService.GetBySlug", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
-	}
-
-	users, err := r.userService.GetPercentOfAllUsers(ctx, req.UsersPercent)
-	if err != nil {
-		l.Error("r.userService.GetPercentOfAllUsers", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
-	}
-
-	addRecords := make([]reportModel.Record, 0, len(users))
-	experimentsToAdd := make([]experimentModel.Experiment, 0, len(users))
-	for _, user := range users {
-		experiment := experimentModel.Experiment{
-			UserId:    user.Id,
-			SegmentId: segment.Id,
-		}
-		experimentsToAdd = append(experimentsToAdd, experiment)
-
-		record := reportModel.Record{
-			UserId:      user.Id,
-			SegmentSlug: segment.Slug,
-			Action:      reportModel.AddAction,
-			Date:        time.Now(),
-		}
-		addRecords = append(addRecords, record)
-	}
-
-	if err := r.experimentService.CreateBatch(ctx, experimentsToAdd); err != nil {
-		l.Error("r.experimentService.CreateBatch", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	if err := r.reportService.CreateBatchRecord(ctx, addRecords); err != nil {
-		l.Error("r.reportService.CreateBatchRecord", zap.Error(err))
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.JSON(http.StatusCreated, nil)
 }
