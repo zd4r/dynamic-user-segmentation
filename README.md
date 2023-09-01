@@ -208,5 +208,7 @@ $ curl -X 'POST' \
 
 `response body`: `null`
 
+Подробнее с методом можно ознакомиться после запуска сервиса в [swagger документации](http://localhost:8080/docs/index.html#/segment/create-segment).
+
 ## TODO:
 * Unit и интеграционные тесты
