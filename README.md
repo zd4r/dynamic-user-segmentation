@@ -29,7 +29,8 @@ $ curl -X 'POST' \
 -H 'accept: application/json' \
 -H 'Content-Type: application/json' \
 -d '{
-      "slug": "avito_discount_50"
+      "slug": "avito_discount_50",
+      "usersPercent": 50
     }'
 ```
 **Ответ:**
@@ -153,7 +154,7 @@ curl -X 'GET' \
 
 **Запрос:**
 
-`expireAt` - опциональное поле, формат: `YYYY-MM-DDTHH:MM:SSZ`.
+`expireAt` - опциональное поле, формат (UTC): `YYYY-MM-DDTHH:MM:SSZ`.
 
 ```bash
 $ curl -X 'POST' \
@@ -185,7 +186,28 @@ $ curl -X 'POST' \
 
 Подробнее с методом можно ознакомиться после запуска сервиса в [swagger документации](http://localhost:8080/docs/index.html#/user/update-user-segmentsreport).
 
+## Доп. задание 3.
+В методе создания сегмента, добавить опцию указания процента пользователей, которые будут попадать в сегмент автоматически.
+### Решение
+В метод создания сегмента используется опциональный параметр `UsersPercent`. При его указании заданному проценту текущих пользователей будет присвоен создаваемый сегмент (пользователи выбираются случайным образом без повторения).
+
+**Запрос:**
+```bash
+$ curl -X 'POST' \
+'http://localhost:8080/v1/segment' \
+-H 'accept: application/json' \
+-H 'Content-Type: application/json' \
+-d '{
+      "slug": "avito_discount_50",
+      "usersPercent": 50
+    }'
+```
+**Ответ:**
+
+`status code`: `201`
+
+`response body`: `null`
+
 ## TODO:
 * Unit и интеграционные тесты
-* Доп. задание 3
 * Улучшение обработки ошибок
