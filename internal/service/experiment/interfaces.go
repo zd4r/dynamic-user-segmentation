@@ -12,6 +12,7 @@ type experimentRepository interface {
 	CreateBatch(ctx context.Context, experiments []experimentModel.Experiment) error
 	Delete(ctx context.Context, segment *experimentModel.Experiment) (int64, error)
 	DeleteBatch(ctx context.Context, experiments []experimentModel.Experiment) (int64, error)
+	DeleteAllExpired(ctx context.Context) (int64, error)
 }
 
 var _ experimentRepository = (*experimentRepo.Repository)(nil)
