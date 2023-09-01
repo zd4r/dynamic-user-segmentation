@@ -17,6 +17,7 @@ import (
 
 type userService interface {
 	Create(ctx context.Context, user *userModel.User) error
+	GetPercentOfAllUsers(ctx context.Context, percent int) ([]userModel.User, error)
 	Delete(ctx context.Context, userId int) error
 	GetSegments(ctx context.Context, userId int) ([]segmentModel.Segment, error)
 }
@@ -24,7 +25,7 @@ type userService interface {
 var _ userService = (*userSrv.Service)(nil)
 
 type segmentService interface {
-	Create(ctx context.Context, segment *segmentModel.Segment) error
+	Create(ctx context.Context, slug string) error
 	DeleteBySlug(ctx context.Context, slug string) error
 	GetBySlug(ctx context.Context, slug string) (*segmentModel.Segment, error)
 }
