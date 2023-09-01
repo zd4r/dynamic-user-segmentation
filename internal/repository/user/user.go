@@ -51,6 +51,27 @@ func (r *Repository) Create(ctx context.Context, user *userModel.User) error {
 	return nil
 }
 
+func (r *Repository) GetAll(ctx context.Context) ([]userModel.User, error) {
+	builder := sq.Select("*").
+		From(userTableName)
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := pg.Query{
+		Name:     "user.GetAll",
+		QueryRaw: query,
+	}
+
+	var users []userModel.User
+	if err := r.client.PG().ScanAll(ctx, &users, q, args...); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
 func (r *Repository) Delete(ctx context.Context, userId int) (int64, error) {
 	builder := sq.Delete(userTableName).
 		PlaceholderFormat(sq.Dollar).
@@ -89,8 +110,13 @@ func (r *Repository) GetSegments(ctx context.Context, userId int) ([]segmentMode
 				sq.Eq{
 					fmt.Sprintf("%s.id", userTableName): userId,
 				},
-				sq.GtOrEq{
-					fmt.Sprintf("%s.expire_at", experimentTableName): time.Now(),
+				sq.Or{
+					sq.GtOrEq{
+						fmt.Sprintf("%s.expire_at", experimentTableName): time.Now(),
+					},
+					sq.Eq{
+						fmt.Sprintf("%s.expire_at", experimentTableName): nil,
+					},
 				},
 			},
 		)
