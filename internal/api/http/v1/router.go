@@ -32,7 +32,7 @@ func NewRouter(userService userService, segmentService segmentService, experimen
 
 	{
 		newUserRoutes(h, userService, experimentService, segmentService, reportService, log)
-		newSegmentRoutes(h, segmentService, log)
+		newSegmentRoutes(h, segmentService, experimentService, userService, reportService, log)
 	}
 
 	return handler
