@@ -22,7 +22,7 @@
                 "operationId": "create-segment",
                 "parameters": [
                     {
-                        "description": "Contain segment slug",
+                        "description": "Provide slug of a new segment, optionally provide usersPercent [0,100] (%)",
                         "name": "createSegmentRequest",
                         "in": "body",
                         "required": true,

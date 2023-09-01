@@ -44,7 +44,7 @@ type createSegmentRequest struct {
 // @Tags        segment
 // @ID          create-segment
 // @Accept      json
-// @Param       createSegmentRequest body createSegmentRequest true "Contain segment slug"
+// @Param       createSegmentRequest body createSegmentRequest true "Provide slug of a new segment, optionally provide usersPercent [0,100] (%)"
 // @Success     201
 // @Failure     400 {object} errorResponse
 // @Failure     500 {object} errorResponse
