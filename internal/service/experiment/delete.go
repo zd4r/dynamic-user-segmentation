@@ -34,3 +34,7 @@ func (s *Service) DeleteBatch(ctx context.Context, experiments []experimentModel
 
 	return nil
 }
+
+func (s *Service) DeleteAllExpired(ctx context.Context) (int64, error) {
+	return s.experimentRepository.DeleteAllExpired(ctx)
+}
