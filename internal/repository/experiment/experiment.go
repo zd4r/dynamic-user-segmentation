@@ -2,6 +2,7 @@ package experiment
 
 import (
 	"context"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/zd4r/dynamic-user-segmentation/internal/client/pg"
@@ -129,6 +130,33 @@ func (r *Repository) DeleteBatch(ctx context.Context, experiments []experimentMo
 
 	q := pg.Query{
 		Name:     "experiment.DeleteBatch",
+		QueryRaw: query,
+	}
+
+	ct, err := r.client.PG().Exec(ctx, q, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	return ct.RowsAffected(), nil
+}
+
+func (r *Repository) DeleteAllExpired(ctx context.Context) (int64, error) {
+	builder := sq.Delete(experimentTableName).
+		PlaceholderFormat(sq.Dollar).
+		Where(
+			sq.Lt{
+				"expire_at": time.Now().UTC(),
+			},
+		)
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	q := pg.Query{
+		Name:     "experiment.Delete",
 		QueryRaw: query,
 	}
 
