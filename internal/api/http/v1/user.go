@@ -155,8 +155,7 @@ type updateUserSegmentsRequest struct {
 		ExpireAt *time.Time `json:"expireAt"`
 	} `json:"segmentsToAdd"`
 	SegmentsToRemove []struct {
-		Slug     string     `json:"slug"`
-		ExpireAt *time.Time `json:"expireAt"`
+		Slug string `json:"slug"`
 	} `json:"segmentsToRemove"`
 }
 
