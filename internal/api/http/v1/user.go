@@ -205,7 +205,7 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 		}
 
 		if segment.ExpireAt != nil {
-			if !time.Now().Before(*segment.ExpireAt) {
+			if !time.Now().UTC().Before(*segment.ExpireAt) {
 				l.Error("time.Now().Before", zap.Error(errs.ErrInvalidExpireAtTime))
 				return echo.NewHTTPError(http.StatusInternalServerError, errs.ErrInvalidExpireAtTime)
 			}
@@ -220,7 +220,7 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 			UserId:      userId,
 			SegmentSlug: slug,
 			Action:      reportModel.AddAction,
-			Date:        time.Now(),
+			Date:        time.Now().UTC(),
 		}
 		addRecords = append(addRecords, record)
 
@@ -250,7 +250,7 @@ func (r *userRoutes) UpdateUserSegments(c echo.Context) error {
 			UserId:      userId,
 			SegmentSlug: slug,
 			Action:      reportModel.RemoveAction,
-			Date:        time.Now(),
+			Date:        time.Now().UTC(),
 		}
 		removeRecords = append(removeRecords, record)
 	}
@@ -305,7 +305,7 @@ func (r *userRoutes) GetReport(c echo.Context) error {
 	from := c.QueryParam("from")
 	to := c.QueryParam("to")
 
-	var fromDate, toDate = time.Time{}, time.Now()
+	var fromDate, toDate = time.Time{}, time.Now().UTC()
 
 	if from != "" {
 		fromDate, err = time.Parse(dateLayout, from)

@@ -99,7 +99,7 @@ func (r *segmentRoutes) Create(c echo.Context) error {
 				UserId:      user.Id,
 				SegmentSlug: segment.Slug,
 				Action:      reportModel.AddAction,
-				Date:        time.Now(),
+				Date:        time.Now().UTC(),
 			}
 			addRecords = append(addRecords, record)
 		}
