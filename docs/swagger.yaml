@@ -1,16 +1,11 @@
 basePath: /v1
 definitions:
-  v1.createSegmentAutoFillRequest:
+  v1.createSegmentRequest:
     properties:
       slug:
         type: string
       usersPercent:
         type: integer
-    type: object
-  v1.createSegmentRequest:
-    properties:
-      slug:
-        type: string
     type: object
   v1.createUserRequest:
     properties:
@@ -81,34 +76,6 @@ paths:
           schema:
             $ref: '#/definitions/v1.errorResponse'
       summary: Create new segment
-      tags:
-      - segment
-  /segment-auto-fill:
-    post:
-      consumes:
-      - application/json
-      description: Create new segment and automatically fill it with given percent
-        of current existing users
-      operationId: create-segment-auto-fill
-      parameters:
-      - description: Contain segment slug
-        in: body
-        name: createSegmentAutoFillRequest
-        required: true
-        schema:
-          $ref: '#/definitions/v1.createSegmentAutoFillRequest'
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/v1.errorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/v1.errorResponse'
-      summary: Create new segment with given percent of current users
       tags:
       - segment
   /segment/{slug}:

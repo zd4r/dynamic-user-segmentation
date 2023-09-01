@@ -56,47 +56,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/segment-auto-fill": {
-            "post": {
-                "description": "Create new segment and automatically fill it with given percent of current existing users",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "segment"
-                ],
-                "summary": "Create new segment with given percent of current users",
-                "operationId": "create-segment-auto-fill",
-                "parameters": [
-                    {
-                        "description": "Contain segment slug",
-                        "name": "createSegmentAutoFillRequest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/v1.createSegmentAutoFillRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/v1.errorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/v1.errorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/segment/{slug}": {
             "delete": {
                 "description": "Delete segment",
@@ -348,7 +307,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "v1.createSegmentAutoFillRequest": {
+        "v1.createSegmentRequest": {
             "type": "object",
             "properties": {
                 "slug": {
@@ -356,14 +315,6 @@ const docTemplate = `{
                 },
                 "usersPercent": {
                     "type": "integer"
-                }
-            }
-        },
-        "v1.createSegmentRequest": {
-            "type": "object",
-            "properties": {
-                "slug": {
-                    "type": "string"
                 }
             }
         },
