@@ -9,6 +9,7 @@ import (
 
 	httpV1 "github.com/zd4r/dynamic-user-segmentation/internal/api/http/v1"
 	"github.com/zd4r/dynamic-user-segmentation/internal/config"
+	"github.com/zd4r/dynamic-user-segmentation/internal/cron"
 	"github.com/zd4r/dynamic-user-segmentation/pkg/closer"
 	"github.com/zd4r/dynamic-user-segmentation/pkg/httpserver"
 )
@@ -19,6 +20,7 @@ type App struct {
 	serviceProvider *serviceProvider
 
 	httpServer *httpserver.Server
+	dbCleaner  *cron.DBCleaner
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -38,6 +40,7 @@ func (a *App) Run() error {
 	}()
 
 	a.runHTTPServer()
+	a.runDBCleaner()
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGTERM, os.Interrupt)
@@ -52,6 +55,7 @@ func (a *App) Run() error {
 	if err := a.httpServer.Shutdown(); err != nil {
 		return err
 	}
+	a.dbCleaner.Shutdown()
 
 	return nil
 }
@@ -61,6 +65,7 @@ func (a *App) initDeps(ctx context.Context) error {
 		config.Init,
 		a.initServiceProvider,
 		a.initHTTPServer,
+		a.initDBCleaner,
 	}
 
 	for _, f := range inits {
@@ -95,7 +100,21 @@ func (a *App) initHTTPServer(ctx context.Context) error {
 	return nil
 }
 
+func (a *App) initDBCleaner(ctx context.Context) error {
+	a.dbCleaner = cron.NewDBCleaner(
+		a.serviceProvider.GetExperimentService(ctx),
+		a.serviceProvider.GetLogger("db cleaner"),
+	)
+
+	return nil
+}
+
 func (a *App) runHTTPServer() {
 	log.Printf("HTTP server is running on %s\n", a.serviceProvider.GetHTTPConfig().Port())
 	a.httpServer.Start()
+}
+
+func (a *App) runDBCleaner() {
+	log.Printf("db cleaner cron is running")
+	a.dbCleaner.Start()
 }
