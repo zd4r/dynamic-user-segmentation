@@ -64,6 +64,9 @@ func (r *Repository) GetRecordsInIntervalByUser(ctx context.Context, userId int,
 				sq.LtOrEq{
 					"date": to,
 				},
+				sq.LtOrEq{
+					"date": time.Now(),
+				},
 			},
 		).OrderBy("date DESC")
 
