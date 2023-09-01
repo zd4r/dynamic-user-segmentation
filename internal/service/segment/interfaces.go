@@ -8,7 +8,7 @@ import (
 )
 
 type segmentRepository interface {
-	Create(ctx context.Context, segment *segmentModel.Segment) error
+	Create(ctx context.Context, slug string) error
 	DeleteBySlug(ctx context.Context, slug string) (int64, error)
 	GetBySlug(ctx context.Context, slug string) (*segmentModel.Segment, error)
 }

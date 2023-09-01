@@ -24,11 +24,11 @@ func NewRepository(client pg.Client) *Repository {
 	}
 }
 
-func (r *Repository) Create(ctx context.Context, segment *segmentModel.Segment) error {
+func (r *Repository) Create(ctx context.Context, slug string) error {
 	builder := sq.Insert(segmentTableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns("slug").
-		Values(segment.Slug)
+		Values(slug)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
