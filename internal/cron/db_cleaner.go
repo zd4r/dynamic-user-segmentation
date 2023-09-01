@@ -7,6 +7,10 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	cleanInterval = 1 * time.Minute
+)
+
 type DBCleaner struct {
 	experimentService experimentService
 	shutdown          chan struct{}
@@ -24,7 +28,7 @@ func NewDBCleaner(experimentService experimentService, log *zap.Logger) *DBClean
 func (c *DBCleaner) Start() {
 	ctx := context.TODO()
 	go func() {
-		ticker := time.NewTicker(1 * time.Minute)
+		ticker := time.NewTicker(cleanInterval)
 		for {
 			select {
 			case <-ticker.C:
