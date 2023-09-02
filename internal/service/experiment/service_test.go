@@ -234,6 +234,59 @@ func (suite *experimentTestSuite) TestService_DeleteBatch() {
 	}
 }
 
+func (suite *experimentTestSuite) TestService_DeleteAllExpired() {
+	tests := []struct {
+		name     string
+		mock     func()
+		input    *experimentModel.Experiment
+		expected struct {
+			rowsAffected int64
+			err          error
+		}
+	}{
+		{
+			name: "delete all expired success",
+			mock: func() {
+				suite.experimentRepo.On(
+					"DeleteAllExpired",
+					suite.context,
+					mock.Anything,
+				).Return(int64(1), nil).Once()
+			},
+			input: &experimentModel.Experiment{},
+			expected: struct {
+				rowsAffected int64
+				err          error
+			}{rowsAffected: int64(1), err: nil},
+		},
+		{
+			name: "delete all expired fail",
+			mock: func() {
+				suite.experimentRepo.On(
+					"DeleteAllExpired",
+					suite.context,
+					mock.Anything,
+				).Return(int64(0), errors.New("some error")).Once()
+			},
+			input: &experimentModel.Experiment{},
+			expected: struct {
+				rowsAffected int64
+				err          error
+			}{err: errors.New("some error")},
+		},
+	}
+
+	for _, test := range tests {
+		suite.T().Run(test.name, func(t *testing.T) {
+			test.mock()
+
+			rowsAffected, err := suite.experimentService.DeleteAllExpired(suite.context)
+			require.Equal(t, test.expected.rowsAffected, rowsAffected)
+			require.Equal(t, test.expected.err, err)
+		})
+	}
+}
+
 func TestExperimentTestSuite(t *testing.T) {
 	suite.Run(t, new(experimentTestSuite))
 }
