@@ -7,6 +7,7 @@ import (
 	experimentRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/experiment"
 )
 
+//go:generate mockery --name experimentRepository
 type experimentRepository interface {
 	Create(ctx context.Context, segment *experimentModel.Experiment) error
 	CreateBatch(ctx context.Context, experiments []experimentModel.Experiment) error
