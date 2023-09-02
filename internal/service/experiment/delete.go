@@ -14,7 +14,7 @@ func (s *Service) Delete(ctx context.Context, experiment *experimentModel.Experi
 	}
 
 	if rowsAffected == 0 {
-		return errs.ErrNotFound
+		return errs.ErrExperimentNotFound
 	}
 
 	return nil
@@ -28,7 +28,7 @@ func (s *Service) DeleteBatch(ctx context.Context, experiments []experimentModel
 		}
 
 		if rowsAffected == 0 {
-			return errs.ErrNotFound
+			return errs.ErrExperimentNotFound
 		}
 	}
 
