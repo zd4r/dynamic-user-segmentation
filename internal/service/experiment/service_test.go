@@ -173,6 +173,67 @@ func (suite *experimentTestSuite) TestService_Delete() {
 	}
 }
 
+func (suite *experimentTestSuite) TestService_DeleteBatch() {
+	tests := []struct {
+		name     string
+		mock     func()
+		input    []experimentModel.Experiment
+		expected error
+	}{
+		{
+			name: "delete batch success",
+			mock: func() {
+				suite.experimentRepo.On(
+					"DeleteBatch",
+					suite.context,
+					mock.Anything,
+				).Return(int64(1), nil).Once()
+			},
+			input:    make([]experimentModel.Experiment, 1),
+			expected: nil,
+		},
+		{
+			name:     "delete batch empty slice success",
+			mock:     func() {},
+			input:    make([]experimentModel.Experiment, 0),
+			expected: nil,
+		},
+		{
+			name: "delete batch fail",
+			mock: func() {
+				suite.experimentRepo.On(
+					"DeleteBatch",
+					suite.context,
+					mock.Anything,
+				).Return(int64(1), errors.New("some error")).Once()
+			},
+			input:    make([]experimentModel.Experiment, 1),
+			expected: errors.New("some error"),
+		},
+		{
+			name: "delete batch not found",
+			mock: func() {
+				suite.experimentRepo.On(
+					"DeleteBatch",
+					suite.context,
+					mock.Anything,
+				).Return(int64(0), nil).Once()
+			},
+			input:    make([]experimentModel.Experiment, 1),
+			expected: errs.ErrExperimentNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		suite.T().Run(test.name, func(t *testing.T) {
+			test.mock()
+
+			err := suite.experimentService.DeleteBatch(suite.context, test.input)
+			require.Equal(t, test.expected, err)
+		})
+	}
+}
+
 func TestExperimentTestSuite(t *testing.T) {
 	suite.Run(t, new(experimentTestSuite))
 }
