@@ -7,7 +7,7 @@ import (
 	segmentRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/segment"
 )
 
-//go:generate mockery --name segmentRepository
+//go:generate mockery --name SegmentRepository
 type segmentRepository interface {
 	Create(ctx context.Context, slug string) error
 	DeleteBySlug(ctx context.Context, slug string) (int64, error)

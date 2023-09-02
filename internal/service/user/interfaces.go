@@ -8,7 +8,7 @@ import (
 	userRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/user"
 )
 
-//go:generate mockery --name userRepository
+//go:generate mockery --name UserRepository
 type userRepository interface {
 	Create(ctx context.Context, user *userModel.User) error
 	GetAll(ctx context.Context) ([]userModel.User, error)

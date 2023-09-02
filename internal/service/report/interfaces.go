@@ -8,7 +8,7 @@ import (
 	reportRepo "github.com/zd4r/dynamic-user-segmentation/internal/repository/report"
 )
 
-//go:generate mockery --name reportRepository
+//go:generate mockery --name ReportRepository
 type reportRepository interface {
 	CreateBatchRecord(ctx context.Context, records []reportModel.Record) error
 	GetRecordsInIntervalByUser(ctx context.Context, userId int, from, to time.Time) ([]reportModel.Record, error)
