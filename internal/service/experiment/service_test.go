@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/zd4r/dynamic-user-segmentation/internal/errs"
 	experimentModel "github.com/zd4r/dynamic-user-segmentation/internal/model/experiment"
 	"github.com/zd4r/dynamic-user-segmentation/internal/service/experiment/mocks"
 )
@@ -112,6 +113,61 @@ func (suite *experimentTestSuite) TestService_CreateBatch() {
 			test.mock()
 
 			err := suite.experimentService.CreateBatch(suite.context, test.input)
+			require.Equal(t, test.expected, err)
+		})
+	}
+}
+
+func (suite *experimentTestSuite) TestService_Delete() {
+	tests := []struct {
+		name     string
+		mock     func()
+		input    *experimentModel.Experiment
+		expected error
+	}{
+		{
+			name: "delete success",
+			mock: func() {
+				suite.experimentRepo.On(
+					"Delete",
+					suite.context,
+					mock.Anything,
+				).Return(int64(1), nil).Once()
+			},
+			input:    &experimentModel.Experiment{},
+			expected: nil,
+		},
+		{
+			name: "delete fail",
+			mock: func() {
+				suite.experimentRepo.On(
+					"Delete",
+					suite.context,
+					mock.Anything,
+				).Return(int64(1), errors.New("some error")).Once()
+			},
+			input:    &experimentModel.Experiment{},
+			expected: errors.New("some error"),
+		},
+		{
+			name: "delete not found",
+			mock: func() {
+				suite.experimentRepo.On(
+					"Delete",
+					suite.context,
+					mock.Anything,
+				).Return(int64(0), nil).Once()
+			},
+			input:    &experimentModel.Experiment{},
+			expected: errs.ErrExperimentNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		suite.T().Run(test.name, func(t *testing.T) {
+			test.mock()
+
+			err := suite.experimentService.Delete(suite.context, test.input)
 			require.Equal(t, test.expected, err)
 		})
 	}
