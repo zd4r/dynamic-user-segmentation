@@ -9,6 +9,7 @@ import (
 	"github.com/zd4r/dynamic-user-segmentation/internal/errs"
 	experimentModel "github.com/zd4r/dynamic-user-segmentation/internal/model/experiment"
 	reportModel "github.com/zd4r/dynamic-user-segmentation/internal/model/report"
+	userModel "github.com/zd4r/dynamic-user-segmentation/internal/model/user"
 	"go.uber.org/zap"
 )
 
@@ -52,6 +53,7 @@ type createSegmentRequest struct {
 func (r *segmentRoutes) Create(c echo.Context) error {
 	l := r.log.Named("Create")
 	ctx := c.Request().Context()
+	var err error
 
 	req := new(createSegmentRequest)
 	if err := c.Bind(req); err != nil {
@@ -59,10 +61,17 @@ func (r *segmentRoutes) Create(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	var users []userModel.User
 	if req.UsersPercent != nil {
 		if *req.UsersPercent < 0 || *req.UsersPercent > 100 {
 			l.Error("req.UsersPercent", zap.Error(errs.ErrInvalidUserPercent))
 			return echo.NewHTTPError(http.StatusBadRequest, errs.ErrInvalidUserPercent)
+		}
+
+		users, err = r.userService.GetPercentOfAllUsers(ctx, *req.UsersPercent)
+		if err != nil {
+			l.Error("r.userService.GetPercentOfAllUsers", zap.Error(err))
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 	}
 
@@ -77,12 +86,6 @@ func (r *segmentRoutes) Create(c echo.Context) error {
 		segment, err := r.segmentService.GetBySlug(ctx, slug)
 		if err != nil {
 			l.Error("r.segmentService.GetBySlug", zap.Error(err))
-			return echo.NewHTTPError(http.StatusInternalServerError, err)
-		}
-
-		users, err := r.userService.GetPercentOfAllUsers(ctx, *req.UsersPercent)
-		if err != nil {
-			l.Error("r.userService.GetPercentOfAllUsers", zap.Error(err))
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 
