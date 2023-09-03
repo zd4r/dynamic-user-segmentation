@@ -100,8 +100,30 @@ func (r *userRoutes) Delete(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, errs.ErrInvalidUserId.Error())
 	}
 
+	segments, err := r.userService.GetSegments(ctx, userId)
+	if err != nil {
+		l.Error("strconv.Atoi", zap.Error(errs.ErrInvalidUserId))
+		return echo.NewHTTPError(http.StatusBadRequest, errs.ErrInvalidUserId.Error())
+	}
+
+	removeRecords := make([]reportModel.Record, 0, len(segments))
+	for _, segment := range segments {
+		record := reportModel.Record{
+			UserId:      userId,
+			SegmentSlug: segment.Slug,
+			Action:      reportModel.RemoveAction,
+			Date:        time.Now().UTC(),
+		}
+		removeRecords = append(removeRecords, record)
+	}
+
 	if err := r.userService.Delete(ctx, userId); err != nil {
 		l.Error("r.userService.Delete", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if err := r.reportService.CreateBatchRecord(ctx, removeRecords); err != nil {
+		l.Error("r.reportService.CreateBatchRecord", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
