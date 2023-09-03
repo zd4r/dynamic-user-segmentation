@@ -13,6 +13,7 @@ func requestLoggerConfig() middleware.RequestLoggerConfig {
 	c := middleware.RequestLoggerConfig{
 		LogURI:       true,
 		LogStatus:    true,
+		LogMethod:    true,
 		HandleError:  true,
 		LogError:     true,
 		LogLatency:   true,
