@@ -28,6 +28,7 @@ type segmentService interface {
 	Create(ctx context.Context, slug string) error
 	DeleteBySlug(ctx context.Context, slug string) error
 	GetBySlug(ctx context.Context, slug string) (*segmentModel.Segment, error)
+	GetUsersBySlug(ctx context.Context, slug string) ([]userModel.User, error)
 }
 
 var _ segmentService = (*segmentSrv.Service)(nil)
