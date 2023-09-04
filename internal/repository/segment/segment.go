@@ -2,8 +2,10 @@ package segment
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/zd4r/dynamic-user-segmentation/internal/client/pg"
+	userModel "github.com/zd4r/dynamic-user-segmentation/internal/model/user"
 
 	segmentModel "github.com/zd4r/dynamic-user-segmentation/internal/model/segment"
 
@@ -11,7 +13,9 @@ import (
 )
 
 const (
-	segmentTableName = `segment`
+	segmentTableName    = `segment`
+	userTableName       = `"user"`
+	experimentTableName = `experiment`
 )
 
 type Repository struct {
@@ -73,6 +77,34 @@ func (r *Repository) GetBySlug(ctx context.Context, slug string) (*segmentModel.
 	}
 
 	return segment, nil
+}
+
+func (r *Repository) GetUsersBySlug(ctx context.Context, slug string) ([]userModel.User, error) {
+	builder := sq.Select(fmt.Sprintf("%s.id", userTableName)).
+		PlaceholderFormat(sq.Dollar).
+		From(userTableName).
+		Join(fmt.Sprintf("%s ON %s.id= %s.user_id", experimentTableName, userTableName, experimentTableName)).
+		Join(fmt.Sprintf("%s ON %s.segment_id = %s.id", segmentTableName, experimentTableName, segmentTableName)).
+		Where(sq.Eq{
+			fmt.Sprintf("%s.slug", segmentTableName): slug,
+		})
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	q := pg.Query{
+		Name:     "segment.GetUsers",
+		QueryRaw: query,
+	}
+
+	var users []userModel.User
+	if err := r.client.PG().ScanAll(ctx, &users, q, args...); err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func (r *Repository) DeleteBySlug(ctx context.Context, slug string) (int64, error) {
