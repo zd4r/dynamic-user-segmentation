@@ -136,8 +136,30 @@ func (r *segmentRoutes) Delete(c echo.Context) error {
 
 	slug := strings.ToLower(c.Param("slug"))
 
+	users, err := r.segmentService.GetUsersBySlug(ctx, slug)
+	if err != nil {
+		l.Error("r.segmentService.GetUsersBySlug", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	removeRecords := make([]reportModel.Record, 0, len(users))
+	for _, user := range users {
+		record := reportModel.Record{
+			UserId:      user.Id,
+			SegmentSlug: slug,
+			Action:      reportModel.RemoveAction,
+			Date:        time.Now().UTC(),
+		}
+		removeRecords = append(removeRecords, record)
+	}
+
 	if err := r.segmentService.DeleteBySlug(ctx, slug); err != nil {
 		l.Error("r.segmentService.DeleteBySlug", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if err := r.reportService.CreateBatchRecord(ctx, removeRecords); err != nil {
+		l.Error("r.reportService.CreateBatchRecord", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
