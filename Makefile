@@ -25,7 +25,7 @@ swag-v1: ## swag init
 .PHONY: swag-v1
 
 mock: ## create interfaces' mocks
-	mockgen -source=./internal/api/usecase/interfaces.go --destination=./internal/api/usecase/mocks_test.go -package=usecase_test
+	go generate ./...
 .PHONY: mock
 
 test: ## run test
