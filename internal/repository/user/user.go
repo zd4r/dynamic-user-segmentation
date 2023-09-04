@@ -127,13 +127,12 @@ func (r *Repository) GetSegments(ctx context.Context, userId int) ([]segmentMode
 	}
 
 	q := pg.Query{
-		Name:     "user.GetUserSegments",
+		Name:     "user.GetSegments",
 		QueryRaw: query,
 	}
 
 	var segments []segmentModel.Segment
-	err = r.client.PG().ScanAll(ctx, &segments, q, args...)
-	if err != nil {
+	if err := r.client.PG().ScanAll(ctx, &segments, q, args...); err != nil {
 		return nil, err
 	}
 
