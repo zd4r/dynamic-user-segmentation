@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -70,6 +71,80 @@ func (suite *reportTestSuite) TestService_CreateBatchRecord() {
 
 			err := suite.reportService.CreateBatchRecord(suite.context, test.input)
 			require.Equal(t, test.expected, err)
+		})
+	}
+}
+
+func (suite *reportTestSuite) TestService_GetRecordsInIntervalByUser() {
+	var tests = []struct {
+		name  string
+		mock  func()
+		input struct {
+			userId int
+			from   time.Time
+			to     time.Time
+		}
+		expected struct {
+			result []reportModel.Record
+			err    error
+		}
+	}{
+		{
+			name: "get records in interval by user success",
+			mock: func() {
+				suite.reportRepo.On(
+					"GetRecordsInIntervalByUser",
+					suite.context,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil, nil).Once()
+			},
+			input: struct {
+				userId int
+				from   time.Time
+				to     time.Time
+			}{},
+			expected: struct {
+				result []reportModel.Record
+				err    error
+			}{nil, nil},
+		},
+		{
+			name: "get records in interval by user fail",
+			mock: func() {
+				suite.reportRepo.On(
+					"GetRecordsInIntervalByUser",
+					suite.context,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil, errors.New("some error")).Once()
+			},
+			input: struct {
+				userId int
+				from   time.Time
+				to     time.Time
+			}{},
+			expected: struct {
+				result []reportModel.Record
+				err    error
+			}{nil, errors.New("some error")},
+		},
+	}
+
+	for _, test := range tests {
+		suite.T().Run(test.name, func(t *testing.T) {
+			test.mock()
+
+			records, err := suite.reportService.GetRecordsInIntervalByUser(
+				suite.context,
+				test.input.userId,
+				test.input.from,
+				test.input.to,
+			)
+			require.Equal(t, test.expected.result, records)
+			require.Equal(t, test.expected.err, err)
 		})
 	}
 }
