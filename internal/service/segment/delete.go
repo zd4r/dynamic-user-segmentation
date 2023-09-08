@@ -13,7 +13,7 @@ func (s *Service) DeleteBySlug(ctx context.Context, slug string) error {
 	}
 
 	if rowsAffected == 0 {
-		return errs.ErrNotFound
+		return errs.ErrSegmentNotFound
 	}
 
 	return nil

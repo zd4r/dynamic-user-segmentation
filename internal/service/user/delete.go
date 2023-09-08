@@ -13,7 +13,7 @@ func (s *Service) Delete(ctx context.Context, userId int) error {
 	}
 
 	if rowsAffected == 0 {
-		return errs.ErrNotFound
+		return errs.ErrUserNotFound
 	}
 
 	return nil
